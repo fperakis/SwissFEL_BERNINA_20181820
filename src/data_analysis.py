@@ -7,13 +7,16 @@ from jungfrau_utils import apply_gain_pede, apply_geometry
 h5py.enable_ipython_completer()
 import time
 
+sys.path.insert(0, '../src/')
+from integrators import *
+
 def process_run(run):
     '''
     Script that processes a given run by doing the following:
     * loads files from raw data (.json)
     * applies corrections (gain, pedestals, geometry)
     * calculates average 2D image
-    * angular integrator (not yet implemented)
+    * angular integrator
     '''
 
     # load data
@@ -28,18 +31,31 @@ def process_run(run):
     # apply corrections and geometry
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
     icorr_geom = apply_geometry(icorr,'JF07T32V01')
+
+    # initialise for angular integration
+    rad_dist = radial_distances(icorr_sum)
+    r, iq = angular_average(icorr_sum, rad=rad_dist) # memory error with mask, why?
+    iqs = np.zeros((num_shots, iq.shape[0]))
+    iqs[0] = iq
+
+    # loop over all shots
     for i_shot in range(1,10):#num_shots):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom += apply_geometry(icorr,'JF07T32V01')
+        r, iq = angular_average(icorr_geom, rad=rad_dist) # memory error with mask, why?
+        iqs[i_shot] = iq
+        icorr_sum += icorr_geom
+
         print('%.1f Hz'%(1.0/(time.time() - t1)))
 
-    save_data = np.array([icorr_geom, num_shots])
+    save_data = np.array([icorr_geom, num_shots,r,iqs])
     save_path = '/sf/bernina/data/p17743/scratch/hdf5/run%s.h5'%run
     print(save_path)
     save_h5(save_path,save_data)
 
     return
+
 
 
 def load_corrections():
@@ -61,13 +77,15 @@ def save_h5(save_path,save_data):
     Saves the processed data in h5.
     '''
 
-    avg_img_2d,num_shots = save_data
+    avg_img_2d,num_shots,r,iqs = save_data
 
     h5f = h5py.File(save_path, 'w')
 
     IMG_2D = h5f.create_group("JF7")
     IMG_2D.create_dataset("2D_img", data = avg_img_2d, dtype = 'f')
     IMG_2D.create_dataset("num_shots", data = num_shots, dtype = 'i')
+    IMG_2D.create_dataset("Q_bins", data = r, dtype = 'f')
+    IMG_2D.create_dataset("I_Q", data = iqs, dtype = 'f')
 
     h5f.close()
-
+    return
