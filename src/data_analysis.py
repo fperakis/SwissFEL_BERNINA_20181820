@@ -35,7 +35,7 @@ def process_run(run):
         print('%.1f Hz'%(1.0/(time.time() - t1)))
 
     save_data = np.array([icorr_geom, num_shots])
-    save_path = '/sf/bernina/data/p17743/res/scratch/hdf5/run%s.h5'%run
+    save_path = '/sf/bernina/data/p17743/scratch/hdf5/run%s.h5'%run
     print(save_path)
     save_h5(save_path,save_data)
 
