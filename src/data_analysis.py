@@ -23,7 +23,7 @@ def process_run(run):
     num_shots = jf7.data.shape[jf7.eventDim]
  
     # load corrections
-    pede,noise,mask = load_corrections()
+    gains,pede,noise,mask = load_corrections()
 
     # apply corrections and geometry
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
@@ -52,7 +52,7 @@ def load_corrections():
         pede = f['gains'].value
         noise = f['gainsRMS'].value
         mask = f['pixel_mask'].value
-    return pede,noise,mask
+    return gains,pede,noise,mask
 
 
 def save_h5(save_path,save_data):
