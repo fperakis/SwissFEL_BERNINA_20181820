@@ -28,7 +28,7 @@ def process_run(run):
     # apply corrections and geometry
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
     icorr_geom = apply_geometry(icorr,'JF07T32V01')
-    for i_shot in range(num_shots):
+    for i_shot in range(1,10):#num_shots):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom += apply_geometry(icorr,'JF07T32V01')
