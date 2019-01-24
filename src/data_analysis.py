@@ -66,8 +66,8 @@ def save_h5(save_path,save_data):
     h5f = h5py.File(save_path, 'w')
 
     IMG_2D = h5f.create_group("Average_2D_Image")
-    IMG_2D.create_dataset("2D_img", data = avg_img_2d, dtype = i)
-    IMG_2D.create_dataset("num_shots", data = num_shots, dtype = i)
+    IMG_2D.create_dataset("2D_img", data = avg_img_2d, dtype = 'f')
+    IMG_2D.create_dataset("num_shots", data = num_shots, dtype = 'i')
 
     h5f.close()
 
