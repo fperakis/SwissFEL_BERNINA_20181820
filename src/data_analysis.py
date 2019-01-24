@@ -40,7 +40,7 @@ def process_run(run):
     return icorr_geom,num_shots
 
 
-def load_corrections()
+def load_corrections():
     '''
     Loads the corrections from a predefined path
     '''
