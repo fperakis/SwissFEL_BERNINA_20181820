@@ -5,7 +5,7 @@ from escape.parse import swissfel
 import h5py
 from jungfrau_utils import apply_gain_pede, apply_geometry
 h5py.enable_ipython_completer()
-import time
+import time,sys
 
 sys.path.insert(0, '../src/')
 from integrators import *
