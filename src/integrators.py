@@ -1,114 +1,137 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
-# analysis tools from scikit-beam
-# (https://github.com/scikit-beam/scikit-beam/tree/master/skbeam/core)
-import skbeam.core.roi as roi
-import skbeam.core.utils as utils
+ELEMENTARY_CHARGE = 1.602176634E-19 # C
+SPEED_OF_LIGHT = 299792458 # m/s
+PLANCK_CONSTANT = 6.62607015E-34 # Js
 
-def angular_average(image, calibrated_center,mask,threshold=0, nx=100,
-                     pixel_size=(1, 1),  min_x=None, max_x=None):
-    """Circular average of the the image data
-    The circular average is also known as the radial integration
-    (adapted from scikit-beam.roi)
+def angular_average(image, mask=None, rad=None, center=None, threshold=None, nx=None,
+                     pixel_size=None, photon_energy=None, detector_distance=None, min_x=None, max_x=None):
+    """Azimuthal average of the image data
+    The azimuthal average is also known as the radial profile
+
     Parameters
     ----------
     image : array
         Image to compute the average as a function of radius
-    calibrated_center : tuple
-        The center of the image in pixel units
+    center : tuple
+        The beam position in the image in pixel units
         argument order should be (row, col)
+        defaults to image center
     mask  : arrayint, optional
         Boolean array with 1s (and 0s) to be used (or not) in the average
     threshold : int, optional
-        Ignore counts above `threshold`
-        default is zero
+        Ignore counts above `threshold` [not implemented]
+        default is off
     nx : int, optional
         number of bins in x
-        defaults is 100 bins
+        defaults to 1 bin/pixel
     pixel_size : tuple, optional
-        The size of a pixel (in a real unit, like mm).
-        argument order should be (pixel_height, pixel_width)
-        default is (1, 1)
+        The size of a pixel (in SI units).
+        argument order should be np.float  [(pixel_height, pixel_width) not implemented]
+        default is 1
     min_x : float, optional number of pixels
         Left edge of first bin defaults to minimum value of x
     max_x : float, optional number of pixels
         Right edge of last bin defaults to maximum value of x
+    
     Returns
     -------
-    bin_centers : array
+    bin_centers : np.ndarray
         The center of each bin in R. shape is (nx, )
-    ring_averages : array
-        Radial average of the image. shape is (nx, ).
+    rad_profile : np.ndarray
+        Radial profile of the image. shape is (nx, ).
     """
-    # - create radial grid
-    radial_val = utils.radial_grid(calibrated_center, image.shape, pixel_size)
-
-    # - create unitary mask (in case it's none)
+    
+    if rad is None:
+        # compute the radii for image[y, x]
+        x = np.arange(image.shape[1])
+        y = np.arange(image.shape[0])
+        xx, yy = np.meshgrid(x, y)
+        if center is None:
+            xx = xx.astype(np.float64) - (image.shape[1]-1)/2.
+            yy = yy.astype(np.float64) - (image.shape[0]-1)/2.
+        else:
+            xx -= center[1]
+            yy -= center[0]
+        rad = np.sqrt(xx*xx + yy*yy)
+        del x, y
+        del xx, yy
+    assert rad.shape == image.shape
+    
+    if (photon_energy is not None) and (detector_distance is not None) and (pixel_size is not None):
+        # convert to momentum transfer in A-1
+        rad = q_scale(rad, photon_energy=photon_energy, detector_distance=detector_distance, pixel_size=pixel_size)
+        if nx is None:
+            nx = 1000 # set scale so not 1 bin/A-1 is used
+    
+    # histogram the intensities and normalize by number of pixels in each bin to obtain average intensity
+    if nx is None:
+        nBins = np.arange(np.floor(rad.min()), np.ceil(rad.max())+1)
+    else:
+        nBins = np.int(nx)
     if mask is None:
-        mask=np.ones(image.shape) 
-  
-    # - bin values of image based on the radial coordinates
-    bin_edges, sums, counts = utils.bin_1D(np.ravel(radial_val*mask),
-                                           np.ravel(image*mask), nx,
-                                           min_x=min_x,
-                                           max_x=max_x)
-    th_mask = counts > threshold
-    ring_averages = sums[th_mask] / counts[th_mask]
-    ring_averages = sums[th_mask] / counts[th_mask]
+        bin_values, bin_edges = np.histogram(rad, weights=image, bins=nBins) 
+        bin_normalizations = np.histogram(rad, bins=bin_edges)
+    else:
+        bin_values, bin_edges = np.histogram(rad[mask], weights=image[mask], bins=nBins)
+        bin_normalizations = np.histogram(rad[mask], bins=bin_edges)
+    rad_profile = bin_values[np.where(bin_normalizations[0] > 0)]/bin_normalizations[0][np.where(bin_normalizations[0] > 0)]
+    bin_centers = np.array([(bin_edges[i] + bin_edges[i+1])/2 for i in range(len(bin_values))])
+    
+    # run into 'High memory usage error', try to delete
+    del rad
+    del bin_values, bin_edges, bin_normalizations
+    return bin_centers, rad_profile
 
-    bin_centers = utils.bin_edges_to_centers(bin_edges)[th_mask]
+def radial_distances(image, center=None):
+    """ Calculates radial distances of the pixels in the image, can be used as input
+    to angular_average to speed up algorithm.
 
-    return bin_centers, ring_averages
-
-def radial_average(image, calibrated_center,mask,threshold=0, nx=100,
-                     pixel_size=(1, 1),  min_x=None, max_x=None):
-    """Radial average of the the image data
-    The radial average is also known as the azimuthal integration
-    (adapted from scikit-beam.roi)
     Parameters
     ----------
     image : array
         Image to compute the average as a function of radius
-    calibrated_center : tuple
-        The center of the image in pixel units
+    center : tuple
+        The beam position in the image in pixel units
         argument order should be (row, col)
-    mask  : arrayint, optional
-        Boolean array with 1s (and 0s) to be used (or not) in the average
-    threshold : int, optional
-        Ignore counts above `threshold`
-        default is zero
-    nx : int, optional
-        number of bins in x
-        defaults is 100 bins
-    pixel_size : tuple, optional
-        The size of a pixel (in a real unit, like mm).
-        argument order should be (pixel_height, pixel_width)
-        default is (1, 1)
-    min_x : float, optional number of pixels
-        Left edge of first bin defaults to minimum value of x
-    max_x : float, optional number of pixels
-        Right edge of last bin defaults to maximum value of x
+        defaults to image center
+    
     Returns
     -------
-    bin_centers : array
-        The center of each bin in R. shape is (nx, )
-    phi_averages : array
-        Radial average of the image. shape is (nx, ).
+    rad : np.ndarray
+        Radial distances of the pixels in image. shape is same as image (ny, nx).
     """
-    # - create angular grid
-    phi_val = utils.angle_grid(calibrated_center, image.shape,pixel_size)#*180./np.pi+180.
-    # - create unitary mask (in case it's none)
-    if mask is None:
-        mask=np.ones(image.shape)
+    
+    # compute the radii for image[y, x]
+    x = np.arange(image.shape[1])
+    y = np.arange(image.shape[0])
+    xx, yy = np.meshgrid(x, y)
+    if center is None:
+        xx = xx.astype(np.float64) - (image.shape[1]-1)/2.
+        yy = yy.astype(np.float64) - (image.shape[0]-1)/2.
+    else:
+        xx -= center[1]
+        yy -= center[0]
+    rad = np.sqrt(xx*xx + yy*yy)
+    return rad
 
-    # - bin values of image based on the angular coordinates
-    bin_edges, sums, counts = utils.bin_1D(np.ravel(phi_val*mask),
-                                           np.ravel(image*mask), nx,
-                                           min_x=min_x,
-                                           max_x=max_x)
-    th_mask = counts > threshold
-    phi_averages = np.array(sums[th_mask],dtype=float)/ np.array(counts[th_mask],dtype=float)
-    bin_centers = utils.bin_edges_to_centers(bin_edges)[th_mask]
+def q_scale(pixel_distances, photon_energy=9500, detector_distance=0.140, pixel_size=75E-6):
+    """
+    Compute the momentum transfer (A-1) for a radial profile in pixels
+    
+    Parameters
+    ----------
+    pixelDistances : np.ndarray
+        The pixel distances (center of each bin) from the beam center, in pixel units
+    
+    Returns
+    -------
+    q : np.ndarray
+        The momentum transfer (A-1)
+    """
+    wavelength = PLANCK_CONSTANT*SPEED_OF_LIGHT/(photon_energy*ELEMENTARY_CHARGE)
+    # convert to momentum transfer in A-1
+    q = 2.*np.pi*2.*np.sin(0.5*np.arctan2(pixel_distances*pixel_size, detector_distance))/(wavelength*1E10)
+    return q
 
-    return bin_centers, phi_averages
+
