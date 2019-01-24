@@ -48,7 +48,7 @@ def load_corrections():
 
     with h5py.File('/sf/bernina/config/jungfrau/gainMaps/JF07T32V01/gains.h5','r') as f:
         gains = f['gains'].value
-with h5py.File('/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5','r') as f:
+    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5','r') as f:
         pede = f['gains'].value
         noise = f['gainsRMS'].value
         mask = f['pixel_mask'].value
