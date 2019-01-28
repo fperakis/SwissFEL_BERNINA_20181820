@@ -10,7 +10,7 @@ import time,sys
 sys.path.insert(0, '../src/')
 from integrators import *
 
-def process_run(run):
+def process_run(run,path):
     '''
     Script that processes a given run by doing the following:
     * loads files from raw data (.json)
@@ -20,7 +20,6 @@ def process_run(run):
     '''
 
     # load data
-    path = '/sf/bernina/data/p17743/res/scan_info/run%s.json'%run
     data = swissfel.parseScanEco_v01(path,createEscArrays=True,memlimit_mD_MB=50)
     jf7 = data['JF07T32V01'] # JungFrau data
     num_shots = jf7.data.shape[jf7.eventDim]
