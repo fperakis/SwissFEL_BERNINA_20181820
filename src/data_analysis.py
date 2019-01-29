@@ -34,10 +34,11 @@ def process_run(run,path,num_shots=0):
     # apply corrections and geometry
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
     icorr_sum = apply_geometry(icorr,'JF07T32V01')
+    mask_geom = ~apply_geometry(~(mask>0),'JF07T32V01')
 
     # initialise for angular integration
     rad_dist = radial_distances(icorr_sum)
-    r, iq = angular_average(icorr_sum, rad=rad_dist) # memory error with mask, why?
+    r, iq = angular_average(icorr_sum, rad=rad_dist,mask=mask_geom) # memory error with mask, why?
     iqs = np.zeros((num_shots, iq.shape[0]))
     iqs[0] = iq
 
@@ -46,7 +47,7 @@ def process_run(run,path,num_shots=0):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
-        r, iq = angular_average(icorr_geom, rad=rad_dist) # memory error with mask, why?
+        r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_geom) # memory error with mask, why?
         iqs[i_shot] = iq
         icorr_sum += icorr_geom
 
