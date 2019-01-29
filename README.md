@@ -18,7 +18,7 @@ $ ssh -X ra-c-XXX # where XXX is the node number (for ex. 006)
 
 2) activate bernina conda environment
 ```bash
-source /sf/bernina/bin/anaconda_env
+$ source /sf/bernina/bin/anaconda_env
 ```
 
 note that your ~/.bashrc should contain:
