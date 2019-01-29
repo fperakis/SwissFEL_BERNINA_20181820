@@ -34,10 +34,11 @@ def process_run(run,path,num_shots=0):
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
     icorr_sum = apply_geometry(icorr,'JF07T32V01')
     mask_geom = ~apply_geometry(~(mask>0),'JF07T32V01')
+    mask_inv = np.logical_not(mask_geom) #inversed: 0 masked, 1 not masked
 
     # initialise for angular integration
     rad_dist = radial_distances(icorr_sum)
-    r, iq = angular_average(icorr_sum, rad=rad_dist,mask=mask_geom)
+    r, iq = angular_average(icorr_sum, rad=rad_dist,mask=mask_inv)
     iqs = np.zeros((num_shots, iq.shape[0]))
     iqs[0] = iq
 
@@ -46,7 +47,7 @@ def process_run(run,path,num_shots=0):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
-        r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_geom)
+        r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_inv)
         iqs[i_shot] = iq
         icorr_sum += icorr_geom
         print('run%s - s.%i - %.1f Hz'%(run,i_shot,1.0/(time.time() - t1)))
@@ -65,8 +66,9 @@ def load_corrections():
 
     with h5py.File('/sf/bernina/config/jungfrau/gainMaps/JF07T32V01/gains.h5','r') as f:
         gains = f['gains'].value
-    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5','r') as f:
+    with h5py.File('/sf/bernina/data/p17743/res/waterJet_tests/JFpedestal/pedestal_20190125_1507.JF07T32V01.res.h5','r') as f:
         pede = f['gains'].value
+    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5','r') as f:
         noise = f['gainsRMS'].value
         mask = f['pixel_mask'].value
     return gains,pede,noise,mask
