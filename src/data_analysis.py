@@ -38,7 +38,9 @@ def process_run(run,path,num_shots=0):
 
     # initialise for angular integration
     rad_dist = radial_distances(icorr_sum)
-    r, iq = angular_average(icorr_sum, rad=rad_dist,mask=mask_inv)
+    ra = RadialAverager(rad_dist, mask_inv)
+    r  = ra.bin_centers
+    iq = ra(icorr_sum)
     iqs = np.zeros((num_shots, iq.shape[0]))
     iqs[0] = iq
 
@@ -47,7 +49,8 @@ def process_run(run,path,num_shots=0):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
-        r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_inv)
+        #r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_inv)
+        iq = ra(icorr_geom)
         iqs[i_shot] = iq
         icorr_sum += icorr_geom
         print('run%s - s.%i - %.1f Hz'%(run,i_shot,1.0/(time.time() - t1)))
