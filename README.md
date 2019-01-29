@@ -21,7 +21,7 @@ $ ssh -X ra-c-XXX # where XXX is the node number (for ex. 006)
 $ source /sf/bernina/bin/anaconda_env
 ```
 
-note that your ~/.bashrc should contain:
+IMPORTANT NOTE: your ~/.bashrc should contain:
 
 ```bash
 # Source global definitions
@@ -42,3 +42,18 @@ fi
 ```bash
 $ git clone https://github.com/fperakis/SwissFEL_BERNINA_20181820.git
 ```
+
+
+-----------------------------
+To submit batch jobs using Slurm use:
+
+```bash
+$ sbatch job.sh # to submit job to the default partition, with allocation time of 1 hour
+$ sbatch -p week job.sh # to submit to the partition with longer allocation time (2 days if not specified)
+$ sbatch -p week -t 4-5:30:00 job.sh # to submit job with time limit of 4 days, 5 hours and 30 minutes (max. allowed time limit is 8 days)
+```
+ 
+For a job.sh example see in scripts/job.sh
+and see here for more info about computer cluster analysis at SwissFEL:
+https://www.psi.ch/photon-science-data-services/offline-computing-facility-for-sls-and-swissfel-data-analysis
+
