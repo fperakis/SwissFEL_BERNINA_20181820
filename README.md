@@ -1,11 +1,12 @@
 # SwissFEL_BERNINA_20181820
 ==========================
+
 Data analysis repository for experiments at SwissFEL between Jan 27- Feb 4, 2019 (proposal number: 20181820)
 
 Inlcudes code to:
-*read data from .json files
-*do angular integration
-*calculate pump-probe signal
+- read data from .json files
+- do angular integration
+- calculate pump-probe signal
 
 -----------------------------
 Instalation on an SwissFEL machine
@@ -28,11 +29,7 @@ note that your ~/.bashrc should contain:
 if [ -f /etc/bashrc ]; then
         . /etc/bashrc
 fi
-```
 
-and 
-
-```bash
 #Setup the environment for the PSI pmodules
 #idocumentation : https://amas.psi.ch/Pmodules
 if [ -f /etc/scripts/pmodules.sh ]; then
@@ -41,7 +38,7 @@ fi
 ```
  
 
-3)download the repo:
+3) download the repo:
 
 ```bash
 $ git clone https://github.com/fperakis/SwissFEL_BERNINA_20181820.git
