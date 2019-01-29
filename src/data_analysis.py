@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 from escape.parse import swissfel
 import h5py
 from jungfrau_utils import apply_gain_pede, apply_geometry
-h5py.enable_ipython_completer()
+#h5py.enable_ipython_completer()
 import time,sys
 
 sys.path.insert(0, '../src/')
 from integrators import *
 
-def process_run(run,path):
+def process_run(run,path,num_shots=0):
     '''
     Script that processes a given run by doing the following:
     * loads files from raw data (.json)
@@ -22,8 +22,10 @@ def process_run(run,path):
     # load data
     data = swissfel.parseScanEco_v01(path,createEscArrays=True,memlimit_mD_MB=50)
     jf7 = data['JF07T32V01'] # JungFrau data
-    num_shots = jf7.data.shape[jf7.eventDim]
- 
+    total_shots = jf7.data.shape[jf7.eventDim]
+    if (num_shots>total_shots) or (num_shots==0):
+        num_shots=total_shots
+
     # load corrections
     gains,pede,noise,mask = load_corrections()
 
