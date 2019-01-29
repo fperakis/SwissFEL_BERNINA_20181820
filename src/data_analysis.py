@@ -20,7 +20,9 @@ def process_run(run,path,num_shots=0):
     '''
 
     # load data
-    data = swissfel.parseScanEco_v01(path,createEscArrays=True,memlimit_mD_MB=50)
+    file_path = '%srun%s.json'%(path,run)
+    print(file_path)
+    data = swissfel.parseScanEco_v01(file_path,createEscArrays=True,memlimit_mD_MB=50)
     jf7 = data['JF07T32V01'] # JungFrau data
     total_shots = jf7.data.shape[jf7.eventDim]
     if (num_shots>total_shots) or (num_shots==0):
