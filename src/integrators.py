@@ -4,6 +4,79 @@ ELEMENTARY_CHARGE = 1.602176634E-19 # C
 SPEED_OF_LIGHT = 299792458 # m/s
 PLANCK_CONSTANT = 6.62607015E-34 # Js
 
+
+class RadialAverager(object):
+
+    def __init__(self, q_values, mask, n_bins=101):
+        """
+        Parameters
+        ----------
+        q_values : np.ndarray (float)
+            For each pixel, this is the momentum transfer value of that pixel
+        mask : np.ndarray (int)
+            A boolean (int) saying if each pixel is masked or not
+        n_bins : int
+            The number of bins to employ. If `None` guesses a good value.
+        """
+
+        self.q_values = q_values
+        self.mask = mask
+        self.n_bins = n_bins
+
+        # figure out the number of bins to use
+        if n_bins != None:
+            self.n_bins = n_bins
+            self._bin_factor = float(self.n_bins-1) / self.q_values.max()
+        else:
+            self._bin_factor = 25.0
+            self.n_bins = (self.q_values.max() * self._bin_factor) + 1
+
+        self._bin_assignments = np.floor( q_values * self._bin_factor ).astype(np.int32)
+        self._normalization_array = (np.bincount( self._bin_assignments.flatten(), weights=self.mask.flatten() ) \
+                                    + 1e-100).astype(np.float)
+
+        assert self.n_bins == self._bin_assignments.max() + 1
+        self._normalization_array = self._normalization_array[:self.n_bins]
+
+        return
+
+    def __call__(self, image):
+        """
+        Bin pixel intensities by their momentum transfer.
+        
+        Parameters
+        ----------            
+        image : np.ndarray
+            The intensity at each pixel, same shape as pixel_pos
+
+
+        Returns
+        -------
+        bin_centers : ndarray, float
+            The q center of each bin.
+
+        bin_values : ndarray, int
+            The average intensity in the bin.
+        """
+
+        if not (image.shape == self.q_values.shape):
+            raise ValueError('`image` and `q_values` must have the same shape')
+        if not (image.shape == self.mask.shape):
+            raise ValueError('`image` and `mask` must have the same shape')
+
+        weights = image.flatten() * self.mask.flatten()
+        bin_values = np.bincount(self._bin_assignments.flatten(), weights=weights)
+        bin_values /= self._normalization_array
+
+        assert bin_values.shape[0] == self.n_bins
+
+        return bin_values
+
+    @property
+    def bin_centers(self):
+        return np.arange(self.n_bins) / self._bin_factor
+
+
 def angular_average(image, mask=None, rad=None, center=None, threshold=None, nx=None,
                      pixel_size=None, photon_energy=None, detector_distance=None, min_x=None, max_x=None):
     """Azimuthal average of the image data
