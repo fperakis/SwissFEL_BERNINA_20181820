@@ -56,7 +56,7 @@ def process_run(run,path,num_shots=0):
         print('run%s - s.%i - %.1f Hz'%(run,i_shot,1.0/(time.time() - t1)))
 
     save_data = np.array([icorr_sum, num_shots,r,iqs])
-    save_path = '/sf/bernina/data/p17743/scratch/hdf5/run%s.h5'%run
+    save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
     print('-- Saving data: %s'%save_path)
     save_h5(save_path,save_data)
     return
