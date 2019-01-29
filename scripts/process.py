@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""
+Loads a run file (.json) and creates an hdf5 file with 
+the average image and the angular average of each shot
+
+Example use:
+ ./process.py -r 0000_test01 -s 10
+
+"""
+
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
