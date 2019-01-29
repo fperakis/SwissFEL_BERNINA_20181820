@@ -1,5 +1,4 @@
 # SwissFEL_BERNINA_20181820
-==========================
 
 Data analysis repository for experiments at SwissFEL between Jan 27- Feb 4, 2019 (proposal number: 20181820)
 
@@ -10,7 +9,7 @@ Inlcudes code to:
 
 -----------------------------
 Instalation on an SwissFEL machine
-1) ssh to a data node by:
+1) ssh to a data analysis node by:
 ```bash
 $ salloc -p day   # allocate nodes
 $ squeue          # to view which node is allocated
