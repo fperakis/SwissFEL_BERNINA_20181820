@@ -18,7 +18,6 @@ import argparse
 
 from escape.parse import swissfel
 from jungfrau_utils import apply_gain_pede, apply_geometry
-#h5py.enable_ipython_completer()
 
 sys.path.insert(0, '../src/')
 from data_analysis import *
