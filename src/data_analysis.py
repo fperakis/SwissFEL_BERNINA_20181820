@@ -21,12 +21,12 @@ def process_run(run,path,num_shots=0):
 
     # load data
     file_path = '%srun%s.json'%(path,run)
-    print(file_path)
+    print('-- Loading data:%s'%file_path)
     data = swissfel.parseScanEco_v01(file_path,createEscArrays=True,memlimit_mD_MB=50)
     jf7 = data['JF07T32V01'] # JungFrau data
     total_shots = jf7.data.shape[jf7.eventDim]
     if (num_shots>total_shots) or (num_shots==0):
-        num_shots=total_shots
+        num_shots = total_shots
 
     # load corrections
     gains,pede,noise,mask = load_corrections()
@@ -42,7 +42,7 @@ def process_run(run,path,num_shots=0):
     iqs[0] = iq
 
     # loop over all shots
-    for i_shot in range(1,10):#num_shots):
+    for i_shot in range(1,num_shots):
         t1 = time.time()
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
@@ -50,15 +50,14 @@ def process_run(run,path,num_shots=0):
         iqs[i_shot] = iq
         icorr_sum += icorr_geom
 
-        print('%.1f Hz'%(1.0/(time.time() - t1)))
+        print('run%s - s.%i - %.1f Hz'%(run,i_shot,1.0/(time.time() - t1)))
 
     save_data = np.array([icorr_sum, num_shots,r,iqs])
     save_path = '/sf/bernina/data/p17743/scratch/hdf5/run%s.h5'%run
-    print(save_path)
+    print('-- Saving data: %s'%save_path)
     save_h5(save_path,save_data)
 
     return
-
 
 
 def load_corrections():

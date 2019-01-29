@@ -24,7 +24,7 @@ parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/
 args = parser.parse_args()
 run  = args.run
 path = args.path 
-nshots = args.shots
+shots = args.shots
 
 # - process run
-process_run(run,path,nshots)
+process_run(run,path,num_shots = shots)
