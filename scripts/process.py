@@ -29,7 +29,7 @@ parser.add_argument('-r', '--run', type=str, required=True, help='run number to 
 parser.add_argument('-s','--shots',type=int, default=0, help='number of shots to process (default: 0 = all)')
 parser.add_argument('-t','--threshold',type=int, default=0, help='hit threshold for radial profile (default: 0 = no hits)')
 parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/scan_info/',help='path to data')
-'/sf/bernina/data/p17743/scratch/hdf5'
+#'/sf/bernina/data/p17743/scratch/hdf5'
 
 args = parser.parse_args()
 run  = args.run
