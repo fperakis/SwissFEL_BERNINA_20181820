@@ -40,7 +40,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
 
     # initialise for angular integration
     rad_dist = radial_distances(icorr_sum,center=(2117,2222))
-    ra = RadialAverager(rad_dist, mask_invi)
+    ra = RadialAverager(rad_dist, mask_inv)
     r  = ra.bin_centers
     roi_min = 5
     roi_max = 80
