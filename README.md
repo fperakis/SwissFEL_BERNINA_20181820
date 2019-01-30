@@ -52,17 +52,19 @@ $ cd scripts
 $ ./submit_jobs.sh 0000_test01 # submits run000_test01 with default parameters
 ```
 
+For help how to run `submit_jobs.sh`, do: `$ ./submit_jobs.sh`
+
 Useful Slurm commands:
 
 ```bash
 $ sinfo # check idle nodes
 $ squeue -u ext-sellberg_j # check jobs submitted by user 'ext-sellberg_j'
-# scancel 1438285 # kill job with id 1438285
+$ scancel 1438285 # kill job with id 1438285
 $ sbatch job.sh # to submit job to the default partition, with allocation time of 1 hour
 $ sbatch -p week job.sh # to submit to the partition with longer allocation time (2 days if not specified)
 $ sbatch -p week -t 4-5:30:00 job.sh # to submit job with time limit of 4 days, 5 hours and 30 minutes (max. allowed time limit is 8 days)
 ```
  
-For a job.sh example see in scripts/job.sh
+For a `job.sh` example see: `scripts/job.sh`
 and see here for more info about computer cluster analysis at SwissFEL:
 https://www.psi.ch/photon-science-data-services/offline-computing-facility-for-sls-and-swissfel-data-analysis
