@@ -22,13 +22,16 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     file_path = '%srun%s.json'%(path,run)
     print('-- Loading data:%s'%file_path)
     data = swissfel.parseScanEco_v01(file_path,createEscArrays=True,memlimit_mD_MB=50)
-    jf7 = data['JF07T32V01'] # JungFrau data
+    jf7 = data['JF07T32V01'] # large JungFrau data
+    jf3 = data['JF03T01V01'] # i0 monitor data 
     total_shots = jf7.data.shape[jf7.eventDim]
     if (num_shots>total_shots) or (num_shots==0):
         num_shots = total_shots
+    i0 = np.zeros(total_shots)
 
     # load corrections
     gains,pede,noise,mask = load_corrections()
+    gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0()
 
     # apply corrections and geometry
     t0 = time.time()
@@ -62,6 +65,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     # loop over all shots
     for i_shot in range(1,num_shots):
         t1 = time.time()
+        i0[i_shot] = get_i0(i_shot,jf3,gains_i0,pede_i0,mask_i0)
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
         #r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_inv)
@@ -80,11 +84,12 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     else:
         print('-- Processed %d shots in %d min, %d s'%(num_shots, (time.time()-t0)/60, (time.time()-t0)%60))
     
-    save_data = {"JF7":{"2D_sum":icorr_sum, "num_shots":num_shots, "Q_bins":r, "I_Q":iqs}}
+    save_data = {"JF7":{"2D_sum":icorr_sum, "num_shots":num_shots, "Q_bins":r, "I_Q":iqs,"i0":i0}}
     if iq_threshold > 0:
         save_data["JF7"]["2D_sum_hits"] = hcorr_sum
         save_data["JF7"]["num_hits"] = num_hits
         save_data["JF7"]["I_threshold"] = iq_threshold
+        save_data["JF7"]["i0"] = i0
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
     #save_path = './run%s.h5'%run
     print('-- Saving data: %s'%save_path)
@@ -94,7 +99,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
 
 def load_corrections():
     '''
-    Loads the corrections from a predefined path
+    Loads the corrections for the jungfrau07 detector (16Mpix)
     '''
 
     with h5py.File('/sf/bernina/config/jungfrau/gainMaps/JF07T32V01/gains.h5','r') as f:
@@ -125,3 +130,34 @@ def save_h5(save_path,save_dict):
     
     h5f.close()
     return
+
+
+def load_corrections_i0():
+    '''
+    Loads the corrections for jungfrau03 detector (small one - i0 monitor)
+    '''
+
+    with h5py.File('/sf/bernina/config/jungfrau/gainMaps/JF03T01V01/gains.h5','r') as f:
+        gains = f['gains'].value
+    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestal/pedestal_20190115_1551.JF03T01V01.res.h5','r') as f:
+        pede = f['gains'].value
+        noise = f['gainsRMS'].value
+        mask = f['pixel_mask'].value
+
+    return gains,pede,noise,mask
+
+
+def get_i0(i_shot,jf3,gains,pede,mask):
+    '''
+    calculates the i0 from an ROI of the  small jungfrau detector
+    '''
+    # parameters
+    X1,X2 = 260,500
+    Y1,Y2 = 260,500
+
+    icorr = apply_gain_pede(jf3.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
+    icorr_geom = apply_geometry(icorr,'JF03T01V01')
+    i0 = np.average(icorr_geom[X1:X2,Y1:Y2])
+
+    return i0
+
