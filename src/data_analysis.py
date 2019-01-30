@@ -152,7 +152,7 @@ def get_i0(i_shot,jf3,gains,pede,mask):
     calculates the i0 from an ROI of the  small jungfrau detector
     '''
     # parameters
-    X1,X2 = 260,500
+    X1,X2 = 10,240#260,500
     Y1,Y2 = 260,500
 
     icorr = apply_gain_pede(jf3.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
