@@ -24,9 +24,10 @@ from data_analysis import *
 from integrators import *
 
 # - parsers
-parser = argparse.ArgumentParser(description='Analyze a run of xcslr0016. Use MPI!')
+parser = argparse.ArgumentParser(description='Analyze a run of p17743 at SwissFEL.')
 parser.add_argument('-r', '--run', type=str, required=True, help='run number to process')
-parser.add_argument('-s','--shots',type=int, default=10, help='number of shots to process')
+parser.add_argument('-s','--shots',type=int, default=0, help='number of shots to process (default: 0 = all)')
+parser.add_argument('-t','--threshold',type=int, default=0, help='hit threshold for radial profile (default: 0 = no hits)')
 parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/scan_info/',help='path to data')
 '/sf/bernina/data/p17743/scratch/hdf5'
 
@@ -34,6 +35,7 @@ args = parser.parse_args()
 run  = args.run
 path = args.path 
 shots = args.shots
+threshold = args.threshold
 
 # - process run
-process_run(run,path,num_shots = shots)
+process_run(run, path, num_shots=shots, iq_threshold=threshold)
