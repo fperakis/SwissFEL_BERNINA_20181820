@@ -103,8 +103,8 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
         save_data["JF7"]["2D_sum_hits"] = hcorr_sum
         save_data["JF7"]["num_hits"] = num_hits
         save_data["JF7"]["I_threshold"] = iq_threshold
-    #save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
-    save_path = './run%s.h5'%run
+    save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
+    #save_path = './run%s.h5'%run
     print('-- Saving data: %s'%save_path)
     save_h5(save_path,save_data)
     return
