@@ -8,6 +8,7 @@ import time,sys
 
 sys.path.insert(0, '../src/')
 from integrators import *
+from pedestals import*
 
 def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     '''
@@ -45,7 +46,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
-    gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0()
+    gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0(run)
 
     # apply corrections and geometry
     t0 = time.time()
@@ -114,15 +115,16 @@ def load_corrections(run):
     '''
     Loads the corrections for the jungfrau07 detector (16Mpix)
     '''
-    
+    jf3_pede_file, jf7_pede_file = get_pedestals(run)
+ 
     gain_file = '/sf/bernina/config/jungfrau/gainMaps/JF07T32V01/gains.h5'
-    pede_file = '/sf/bernina/data/p17743/res/waterJet_tests/JFpedestal/pedestal_20190125_1507.JF07T32V01.res.h5'
+    pede_file = jf7_pede_file#'/sf/bernina/data/p17743/res/waterJet_tests/JFpedestal/pedestal_20190125_1507.JF07T32V01.res.h5'
     mask_file = '/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5'
-    try:
-        if (np.int(run.split('_')[0]) > 26):
-            pede_file = '/sf/bernina/data/p17743/res/JF_pedestal/pedestal_20190130_1925.JF07T32V01.res.h5'
-    except ValueError:
-        pass
+    #try:
+    #    if (np.int(run.split('_')[0]) > 26):
+    #        pede_file = '/sf/bernina/data/p17743/res/JF_pedestal/pedestal_20190130_1925.JF07T32V01.res.h5'
+    #except ValueError:
+    #    pass
     with h5py.File(gain_file,'r') as f:
         gains = f['gains'].value
     with h5py.File(pede_file,'r') as f:
@@ -156,15 +158,17 @@ def save_h5(save_path,save_dict):
     return
 
 
-def load_corrections_i0():
+def load_corrections_i0(run):
     '''
     Loads the corrections for jungfrau03 detector (small one - i0 monitor)
     '''
 
+    jf3_pede_file, jf7_pede_file = get_pedestals(run)
     with h5py.File('/sf/bernina/config/jungfrau/gainMaps/JF03T01V01/gains.h5','r') as f:
         gains = f['gains'].value
-    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestal/pedestal_20190115_1551.JF03T01V01.res.h5','r') as f:
+    with h5py.File(jf3_pede_file,'r') as f:
         pede = f['gains'].value
+    with h5py.File('/sf/bernina/data/p17743/res/JF_pedestal/pedestal_20190115_1551.JF03T01V01.res.h5','r') as f:
         noise = f['gainsRMS'].value
         mask = f['pixel_mask'].value
 
