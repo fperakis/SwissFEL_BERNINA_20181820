@@ -44,13 +44,15 @@ def get_pedestals(run, data_path = '/sf/bernina/data/p17743/res/scan_info/',
     diff = np.abs(jf3_date-data_date)
     index_min = np.where(diff == np.min(diff))[0][0]
     recent_jf3 = jf3_files[index_min]
+    recent_jf3_path = pede_path + recent_jf3
 
     # find recent jf7 file
     diff = np.abs(jf7_date-data_date)
     index_min = np.where(diff == np.min(diff))[0][0]
     recent_jf7 = jf7_files[index_min]
+    recent_jf7_path = pede_path + recent_jf7
 
-    return recent_jf3, recent_jf7 
+    return recent_jf3_path, recent_jf7_path 
 
 
 def get_date(filepath):
