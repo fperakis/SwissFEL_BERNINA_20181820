@@ -28,7 +28,21 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     if (num_shots>total_shots) or (num_shots==0):
         num_shots = total_shots
     i0 = np.zeros(total_shots)
-
+    
+    # get event IDs at 100Hz and match with JF pulse IDs at 25 Hz
+    jf_pulse_id = jf7.eventIds[:num_shots] # event ID at 25 Hz
+    evcodes = data['SAR-CVME-TIFALL5:EvtSet'] # trigger codes in 256 channels at 100 Hz
+    laser_on_100Hz = evcodes.data[:,20].compute() # laser trigger at 100 Hz
+    pulse_id = evcodes.eventIds # event ID at 100 Hz
+    matched_id = np.isin(pulse_id, jf_pulse_id) # matched IDs at 25 Hz in 100 Hz arrays
+    assert (np.sum(matched_id) ==  len(jf_pulse_id))
+    print('-- Asserting that %d matched IDs sum up to %d JF7 event IDs' % (np.sum(matched_id), len(jf_pulse_id)))
+    laser_on = laser_on_100Hz[matched_id].astype(np.bool) # laser trigger at 25 Hz
+    
+    # get laser i0
+    laser_i0_100Hz = data['SARES20-LSCP9-FNS:CH1:VAL_GET'].data.compute()
+    laser_i0 = laser_i0_100Hz[matched_id]
+    
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
     gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0()
@@ -84,14 +98,13 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     else:
         print('-- Processed %d shots in %d min, %d s'%(num_shots, (time.time()-t0)/60, (time.time()-t0)%60))
     
-    save_data = {"JF7":{"2D_sum":icorr_sum, "num_shots":num_shots, "Q_bins":r, "I_Q":iqs,"i0":i0}}
+    save_data = {"JF7":{"2D_sum":icorr_sum, "num_shots":num_shots, "Q_bins":r, "I_Q":iqs}, "JF3":{"i0":i0}, "SARES20":{"i0":laser_i0}, "BERNINA":{"event_ID":jf_pulse_id, "laser_on":laser_on}}
     if iq_threshold > 0:
         save_data["JF7"]["2D_sum_hits"] = hcorr_sum
         save_data["JF7"]["num_hits"] = num_hits
         save_data["JF7"]["I_threshold"] = iq_threshold
-        save_data["JF7"]["i0"] = i0
-    save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
-    #save_path = './run%s.h5'%run
+    #save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
+    save_path = './run%s.h5'%run
     print('-- Saving data: %s'%save_path)
     save_h5(save_path,save_data)
     return
@@ -132,10 +145,12 @@ def save_h5(save_path,save_dict):
     for group in save_dict:
         h5g = h5f.create_group(group)
         for dataset in save_dict[group]:
-            if dataset.find("num") >= 0:
-                h5g.create_dataset(dataset, data=save_dict[group][dataset], dtype='i')
+            if (dataset.find("num") >= 0) or (dataset.find("event") >= 0):
+                h5g.create_dataset(dataset, data=save_dict[group][dataset], dtype='u8') # unsigned 64-bit integer
+            elif (dataset.find("laser_on") >= 0):
+                h5g.create_dataset(dataset, data=save_dict[group][dataset], dtype='?') # boolean
             else:
-                h5g.create_dataset(dataset, data=save_dict[group][dataset], dtype='f')
+                h5g.create_dataset(dataset, data=save_dict[group][dataset], dtype='f') # floating point (32-bit?)
     
     h5f.close()
     return
@@ -158,10 +173,10 @@ def load_corrections_i0():
 
 def get_i0(i_shot,jf3,gains,pede,mask):
     '''
-    calculates the i0 from an ROI of the  small jungfrau detector
+    calculates the i0 from an ROI of the  small jungfrau detector (JF3)
     '''
     # parameters
-    X1,X2 = 10,240#260,500
+    X1,X2 = 10,240 #260,500
     Y1,Y2 = 260,500
 
     icorr = apply_gain_pede(jf3.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
