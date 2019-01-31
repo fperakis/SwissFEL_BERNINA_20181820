@@ -171,7 +171,7 @@ def load_corrections_i0():
     return gains,pede,noise,mask
 
 
-def get_i0(i_shot,jf3,gains,pede,mask):
+def get_i0(jf3_image,gains,pede,mask):
     '''
     calculates the i0 from an ROI of the  small jungfrau detector (JF3)
     '''
@@ -179,7 +179,7 @@ def get_i0(i_shot,jf3,gains,pede,mask):
     X1,X2 = 10,240 #260,500
     Y1,Y2 = 260,500
 
-    icorr = apply_gain_pede(jf3.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
+    icorr = apply_gain_pede(jf3_image,G=gains, P=pede, pixel_mask=mask)
     icorr_geom = apply_geometry(icorr,'JF03T01V01')
     i0 = np.average(icorr_geom[X1:X2,Y1:Y2])
 
