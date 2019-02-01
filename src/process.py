@@ -162,10 +162,8 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
     # SAVE AGGREGATE / ACCUMULATOR DATA
     smd.sum(icorr_sum)
-    smd.sum(num_shots)
     smd.sum(hcorr_sum)
     smd.sum(num_hits)
-    smd.sum(iq_threshold)
     
     save_data = {"JF7":
                   {"2D_sum":    icorr_sum, 
