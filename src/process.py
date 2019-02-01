@@ -79,7 +79,7 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
     t0 = time.time()
 
-    save_path = '/sf/bernina/data/p17743/res/work/hdf5/TEST-run%s.h5' % run
+    save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5' % run
     shot_gen = ShotYielder(run, path, num_shots=num_shots)
 
     smd = SmallData(save_path, 'pulse_id')
