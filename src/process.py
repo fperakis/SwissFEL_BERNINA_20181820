@@ -13,10 +13,6 @@ sys.path.insert(0, '../src/')
 from integrators import *
 from masking import *
 
-# global
-iq_threshold=0
-photon_energy=9500
-path = '/sf/bernina/data/p17743/res/scan_info/'
 
 def yield_shots(run, num_shots=0):
     '''
@@ -66,7 +62,8 @@ def yield_shots(run, num_shots=0):
     return
 
 
-def main(run, num_shots=0):
+def main(run, photon_energy=9500, iq_threshold=0, num_shots=0, 
+         path = '/sf/bernina/data/p17743/res/scan_info/'):
 
     t0 = time.time()
 
@@ -78,7 +75,7 @@ def main(run, num_shots=0):
 
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
-    gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0()
+    gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0(run)
     mask_double_pixels(mask)
     mask_geom = ~apply_geometry(~(mask>0),'JF07T32V01')
     mask_inv = np.logical_not(mask_geom) #inverted: 0 masked, 1 not masked
@@ -87,6 +84,7 @@ def main(run, num_shots=0):
     # initialize accumulator arrays
     icorr_sum = np.zeros((4432, 4215))
     hcorr_sum = np.zeros((4432, 4215))
+    num_hits = 0
 
 
     # initialise for angular integration
@@ -110,19 +108,18 @@ def main(run, num_shots=0):
 
         iq         = ra(icorr_geom)
 
-        print(event['laser_i0'])
         smd.event({
                    'JF7' : 
                       {'I_Q': iq},
                      "JF3": 
-                       {"i0": i0}, 
+                       {"i0": float(i0)}, 
                      "SARES20":
-                       {"i0": event['laser_i0']}, 
+                       {"i0": float(event['laser_i0'])}, 
                      "BERNINA":
-                       {"event_ID": event['pulse_id'], 
-                        "laser_on": event['laser_on']}
+                       {"event_ID": int(event['pulse_id']),
+                        "laser_on": int(event['laser_on'])}
                      },
-                    pulse_id = event['pulse_id'])
+                    pulse_id = int(event['pulse_id']))
 
         if (iq_threshold > 0) and (iq[roi_min:roi_max].mean() > iq_threshold):
             hcorr_sum += icorr_sum
@@ -148,19 +145,29 @@ def main(run, num_shots=0):
         print('-- Processed %d shots in %d min, %d s'
               '' % (num_shots, (time.time()-t0)/60, (time.time()-t0)%60))
 
-#    save_data = {"JF7":
-#                  {"2D_sum":    icorr_sum, 
-#                   "num_shots": num_shots, 
-#                   "Q_bins":    r}, 
-#                 }
-#    if iq_threshold > 0:
-#        save_data["JF7"]["2D_sum_hits"] = hcorr_sum
-#        save_data["JF7"]["num_hits"]    = num_hits
-#        save_data["JF7"]["I_threshold"] = iq_threshold
+
+
+    # SAVE AGGREGATE / ACCUMULATOR DATA
+    smd.sum(icorr_sum)
+    smd.sum(num_shots)
+    smd.sum(hcorr_sum)
+    smd.sum(num_hits)
+    smd.sum(iq_threshold)
+    
+    save_data = {"JF7":
+                  {"2D_sum":    icorr_sum, 
+                   "num_shots": num_shots, 
+                   "Q_bins":    r}, 
+                 }
+
+    if iq_threshold > 0:
+        save_data["JF7"]["2D_sum_hits"] = hcorr_sum
+        save_data["JF7"]["num_hits"]    = num_hits
+        save_data["JF7"]["I_threshold"] = iq_threshold
 
     # save to small data file
-#    smd.save(**save_data)
-    smd.save()
+    smd.save(save_data)
+
     return
     
 
