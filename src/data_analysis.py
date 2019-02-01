@@ -52,6 +52,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
 
     # apply corrections and geometry
     t0 = time.time()
+    i0[0] = get_i0(jf3.data[0].compute(),gains_i0,pede_i0,mask_i0)
     icorr = apply_gain_pede(jf7.data[0].compute(),G=gains, P=pede, pixel_mask=mask)
     icorr_sum = apply_geometry(icorr,'JF07T32V01')
     hcorr_sum = np.zeros_like(icorr_sum)
@@ -82,7 +83,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     # loop over all shots
     for i_shot in range(1,num_shots):
         t1 = time.time()
-        i0[i_shot] = get_i0(i_shot,jf3,gains_i0,pede_i0,mask_i0)
+        i0[i_shot] = get_i0(jf3.data[i_shot].compute(),gains_i0,pede_i0,mask_i0)
         icorr = apply_gain_pede(jf7.data[i_shot].compute(),G=gains, P=pede, pixel_mask=mask)
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
         #r, iq = angular_average(icorr_geom, rad=rad_dist,mask=mask_inv)
