@@ -11,6 +11,7 @@ from smalldata import *
 
 sys.path.insert(0, '../src/')
 from integrators import *
+from masking import *
 
 # global
 iq_threshold=0
@@ -78,7 +79,7 @@ def main(run, num_shots=0):
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
     gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0()
-
+    mask_double_pixels(mask)
     mask_geom = ~apply_geometry(~(mask>0),'JF07T32V01')
     mask_inv = np.logical_not(mask_geom) #inverted: 0 masked, 1 not masked
 

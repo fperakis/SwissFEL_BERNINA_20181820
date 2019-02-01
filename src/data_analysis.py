@@ -9,6 +9,7 @@ import time,sys
 sys.path.insert(0, '../src/')
 from integrators import *
 from pedestals import*
+from masking import *
 
 def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     '''
@@ -47,6 +48,7 @@ def process_run(run,path,num_shots=0,iq_threshold=0,photon_energy=9500):
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
     gains_i0,pede_i0,noise_i0,mask_i0 = load_corrections_i0(run)
+    mask_double_pixels(mask)
 
     # apply corrections and geometry
     t0 = time.time()
