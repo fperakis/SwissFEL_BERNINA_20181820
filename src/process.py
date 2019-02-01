@@ -83,7 +83,11 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     shot_gen = ShotYielder(run, path, num_shots=num_shots)
 
     smd = SmallData(save_path, 'pulse_id')
-    ds = MPIDataSource(smd, shot_gen, global_gather_interval=100, break_after=num_shots)
+
+    if num_shots == 0:
+        ds = MPIDataSource(smd, shot_gen, global_gather_interval=100)
+    else:
+        ds = MPIDataSource(smd, shot_gen, global_gather_interval=100, break_after=num_shots)
 
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
