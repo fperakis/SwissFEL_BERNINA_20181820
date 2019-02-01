@@ -14,52 +14,64 @@ from integrators import *
 from masking import *
 
 
-def yield_shots(run, path, num_shots=0):
-    '''
-    Script that processes a given run by doing the following:
-    * loads files from raw data (.json)
-    * applies corrections (gain, pedestals, geometry)
-    * calculates average 2D image
-    * angular integrator
-    '''
+class ShotYielder:
 
-    # load data
-    file_path = '%srun%s.json' % (path,run)
-    print('-- Loading data:%s' % file_path)
+    def __init__(self, run, path, num_shots=0):
+        '''
+        Script that processes a given run by doing the following:
+        * loads files from raw data (.json)
+        * applies corrections (gain, pedestals, geometry)
+        * calculates average 2D image
+        * angular integrator
+        '''
 
-    data = swissfel.parseScanEco_v01(file_path,createEscArrays=True,memlimit_mD_MB=50)
-    jf7 = data['JF07T32V01'] # large JungFrau data
-    jf3 = data['JF03T01V01'] # i0 monitor data 
-    total_shots = jf7.data.shape[jf7.eventDim]
+        # load data
+        file_path = '%srun%s.json' % (path,run)
+        print('-- Loading data:%s' % file_path)
 
-    if (num_shots > total_shots) or (num_shots==0):
-        num_shots = total_shots
-    
-    # get event IDs at 100Hz and match with JF pulse IDs at 25 Hz
-    jf_pulse_id = jf7.eventIds[:num_shots] # event ID at 25 Hz
-    evcodes = data['SAR-CVME-TIFALL5:EvtSet'] # trigger codes in 256 channels at 100 Hz
-    laser_on_100Hz = evcodes.data[:,20] # laser trigger at 100 Hz
+        data = swissfel.parseScanEco_v01(file_path,createEscArrays=True,memlimit_mD_MB=50)
+        jf7 = data['JF07T32V01'] # large JungFrau data
+        jf3 = data['JF03T01V01'] # i0 monitor data 
+        total_shots = jf7.data.shape[jf7.eventDim]
 
-    pulse_id = evcodes.eventIds # event ID at 100 Hz
-    matched_id = np.isin(pulse_id, jf_pulse_id) # matched IDs at 25 Hz in 100 Hz arrays
-    assert (np.sum(matched_id) ==  len(jf_pulse_id))
-    print('-- Asserting that %d matched IDs sum up to %d JF7 event IDs'
-          '' % (np.sum(matched_id), len(jf_pulse_id)))
-    
-    # get laser i0
-    laser_i0_100Hz = data['SARES20-LSCP9-FNS:CH1:VAL_GET'].data
+        if (num_shots > total_shots) or (num_shots==0):
+            num_shots = total_shots
 
-    # SHOT LOOP HERE !!! 
-    for i in range(num_shots):
-        event = {'pulse_id' : pulse_id[i],
-                 'jf7' : jf7.data[i].compute(),
-                 'jf3' : jf3.data[i].compute(),
-                 'laser_on' : laser_on_100Hz[matched_id][i].compute(),
-                 'laser_i0' : laser_i0_100Hz[matched_id][i].compute() 
+        print('found %d total shots' % total_shots)
+        print('will process:', num_shots)
+        
+        # get event IDs at 100Hz and match with JF pulse IDs at 25 Hz
+        jf_pulse_id = jf7.eventIds[:num_shots] # event ID at 25 Hz
+        evcodes = data['SAR-CVME-TIFALL5:EvtSet'] # trigger codes in 256 channels at 100 Hz
+        laser_on_100Hz = evcodes.data[:,20] # laser trigger at 100 Hz
+
+        pulse_id = evcodes.eventIds # event ID at 100 Hz
+        matched_id = np.isin(pulse_id, jf_pulse_id) # matched IDs at 25 Hz in 100 Hz arrays
+        assert (np.sum(matched_id) ==  len(jf_pulse_id))
+        print('-- Asserting that %d matched IDs sum up to %d JF7 event IDs'
+              '' % (np.sum(matched_id), len(jf_pulse_id)))
+        
+        # get laser i0
+        laser_i0_100Hz = data['SARES20-LSCP9-FNS:CH1:VAL_GET'].data
+
+        self.jf_pulse_id = jf_pulse_id
+        self.jf7         = jf7
+        self.jf3         = jf3
+        self.laser_on_100Hz = laser_on_100Hz
+        self.laser_i0_100Hz = laser_i0_100Hz
+        self.matched_id = matched_id
+
+        return 
+
+
+    def __call__(self, i):
+        event = {'pulse_id' : self.jf_pulse_id[i],
+                 'jf7' :      self.jf7.data[i].compute(),
+                 'jf3' :      self.jf3.data[i].compute(),
+                 'laser_on' : self.laser_on_100Hz[self.matched_id][i].compute(),
+                 'laser_i0' : self.laser_i0_100Hz[self.matched_id][i].compute() 
                 }
-        yield event
-    
-    return
+        return event
 
 
 def main(run, photon_energy=9500, iq_threshold=0, num_shots=0, 
@@ -68,10 +80,10 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     t0 = time.time()
 
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/TEST-run%s.h5' % run
-    shot_gen = yield_shots(run, path, num_shots=num_shots)
+    shot_gen = ShotYielder(run, path, num_shots=num_shots)
 
     smd = SmallData(save_path, 'pulse_id')
-    ds = MPIDataSource(smd, shot_gen, global_gather_interval=3) 
+    ds = MPIDataSource(smd, shot_gen, global_gather_interval=100, break_after=num_shots)
 
     # load corrections
     gains,pede,noise,mask = load_corrections(run)
@@ -110,12 +122,12 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
         smd.event({
                    'JF7' : 
-                      {'I_Q': iq},
-                     "JF3": 
+                       {'I_Q': iq},
+                    "JF3": 
                        {"i0": float(i0)}, 
-                     "SARES20":
+                    "SARES20":
                        {"i0": float(event['laser_i0'])}, 
-                     "BERNINA":
+                    "BERNINA":
                        {"event_ID": int(event['pulse_id']),
                         "laser_on": int(event['laser_on'])}
                      },
@@ -127,8 +139,9 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
             is_hit = 1
         else:
             is_hit = 0
-        print('run%s - s.%i - %.1f Hz - %.2f photon/pix - HIT = %d'
+        print('run%s - pid.%d - s.%i - %.1f Hz - %.2f photon/pix - HIT = %d'
               '' % (run,
+                    int(event['pulse_id']),
                     i_shot,
                     1.0/(time.time() - t1),
                     np.mean(icorr_geom[mask_inv])*1000/photon_energy,

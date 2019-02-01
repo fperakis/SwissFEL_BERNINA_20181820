@@ -107,7 +107,7 @@ class MPIDataSource(object):
 
             self.nevent += 1
 
-            evt = next(self.event_generator)
+            #evt = next(self.event_generator)
 
             # logic for regular gathers
             if (self.global_gather_interval is not None) and \
@@ -116,8 +116,8 @@ class MPIDataSource(object):
                 self.sd.gather()
 
             if self.nevent % size == rank:
-                self._currevt = evt
-                yield evt
+                #self._currevt = evt
+                yield self.event_generator(self.nevent)
 
         if hasattr(self, 'sd'):
             self.sd.gather()
