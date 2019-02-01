@@ -47,9 +47,7 @@ $ git clone https://github.com/fperakis/SwissFEL_BERNINA_20181820.git
 To run in parallel:
 
 ```
-module load gcc/8.2.0
-module load openmpi/3.1.3
-salloc -n 24 mpirun ./process.py -r 0069_droplets_10um_2mm -s 18000
+salloc -n 12 mpirun ./process.py -r 0069_droplets_10um_2mm -s 18000
 ```
 with the desired run of choice.
 
