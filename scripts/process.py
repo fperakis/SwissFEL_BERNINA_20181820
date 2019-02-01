@@ -12,16 +12,12 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
-import time
+
 import sys
 import argparse
 
-from escape.parse import swissfel
-from jungfrau_utils import apply_gain_pede, apply_geometry
-
 sys.path.insert(0, '../src/')
-from data_analysis import *
-from integrators import *
+from process import main as process_main
 
 # - parsers
 parser = argparse.ArgumentParser(description='Analyze a run of p17743 at SwissFEL.')
@@ -38,4 +34,5 @@ shots = args.shots
 threshold = args.threshold
 
 # - process run
-process_run(run, path, num_shots=shots, iq_threshold=threshold)
+process_main(run, path=path, num_shots=shots, iq_threshold=threshold)
+

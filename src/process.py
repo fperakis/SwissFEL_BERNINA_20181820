@@ -14,7 +14,7 @@ from integrators import *
 from masking import *
 
 
-def yield_shots(run, num_shots=0):
+def yield_shots(run, path, num_shots=0):
     '''
     Script that processes a given run by doing the following:
     * loads files from raw data (.json)
@@ -68,7 +68,7 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     t0 = time.time()
 
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/TEST-run%s.h5' % run
-    shot_gen = yield_shots(run, num_shots=num_shots)
+    shot_gen = yield_shots(run, path, num_shots=num_shots)
 
     smd = SmallData(save_path, 'pulse_id')
     ds = MPIDataSource(smd, shot_gen, global_gather_interval=3) 
