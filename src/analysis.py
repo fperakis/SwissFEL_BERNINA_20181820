@@ -55,19 +55,12 @@ def find_hits(Iq,threshold = 0.5, q_min = 30, q_max = 80):
     hits = metric>threshold
     return metric,hits
 
-
 def normalize(array, low, high):
     n = np.sum(array[low:high])
     norm_array = array / n
     return norm_array
 
-
-#def calculate_hits(Iq,energy=9.5):
-#    hit = np.average(Iq[hits[i],:], axis=0) 
-#    miss = np.average(Iq[np.logical_not(hits[i]),:], axis=0)
-#    return 
-
-def pump_probe_signal(Iq,hits,laser_on,q_min = 20, q_max = 30):
+def pump_probe_signal(Iq,hits,laser_on,q_min=20,q_max=30):
     '''
     calculate the pump probe signal
     '''
@@ -83,16 +76,8 @@ def pump_probe_signal(Iq,hits,laser_on,q_min = 20, q_max = 30):
     off_hits = np.average(Iq[hits * np.logical_not(laser_on),:], axis=0)
     on_hits  = np.average(Iq[hits * laser_on,:], axis=0)
 
-    #n_hits_on_off = [(np.logical_not(hits) * np.logical_not(laser_ons)).sum(), (np.logical_not(hits) * laser_ons).sum(), np.sum(hits[i] * np.logical_not(laser_ons[i])), np.sum(hits[i] * laser_ons[i])])
-
     # signal
+    #diff_signal = on_hits - off_hits
     diff_signal = normalize(on_hits, q_min, q_max) - normalize(off_hits, q_min, q_max) # / normalize(off_hit, l, h)
-
-    # error estimator (not real error)
-    # calculates the diff_signal for the miss as a reference
-    off_hits_1 = np.average(Iq[hits * np.logical_not(laser_on)][:-1:2], axis=0)
-    off_hits_2 = np.average(Iq[hits * np.logical_not(laser_on)][1::2], axis=0)
-    diff_error = normalize(off_hits_1, q_min, q_max) - normalize(off_hits_2, q_min, q_max)
-
-    return hit_avg,miss_avg,diff_signal,diff_error
+    return hit_avg,miss_avg,diff_signal
 
