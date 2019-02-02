@@ -63,7 +63,7 @@ class ShotYielder:
 
         return 
 
-
+    
     def __call__(self, i):
         event = {'pulse_id' : self.jf_pulse_id[i],
                  'jf7' :      self.jf7.data[i].compute(),
@@ -74,7 +74,7 @@ class ShotYielder:
         return event
 
 
-def main(run, photon_energy=9500, iq_threshold=0, num_shots=0, 
+def main(run, photon_energy=9500, iq_threshold=0, ice_threshold=0, num_shots=0, 
          path = '/sf/bernina/data/p17743/res/scan_info/'):
 
     t0 = time.time()
@@ -130,15 +130,13 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
                     "JF3": 
                        {"i0": float(i0)}, 
                     "SARES20":
-                       {"i0": float(event['laser_i0'])}, 
-                    "BERNINA":
-                       {"event_ID": int(event['pulse_id']),
-                        "laser_on": int(event['laser_on'])}
+                       {"i0": float(event['laser_i0']),
+                        "laser_on": int(event['laser_on'])}, 
                      },
                     pulse_id = int(event['pulse_id']))
-
+        
         if (iq_threshold > 0) and (iq[roi_min:roi_max].mean() > iq_threshold):
-            hcorr_sum += icorr_sum
+            hcorr_sum += icorr_geom
             num_hits += 1
             is_hit = 1
         else:
