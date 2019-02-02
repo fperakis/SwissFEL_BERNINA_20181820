@@ -14,7 +14,7 @@ def load_processed_data(run):
 
     h5path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
     h5file = h5py.File(h5path,'r')
-    img = h5file['JF7/2D_sum'][:]
+    sum = h5file['JF7/2D_sum'][:]
     Iq = h5file['JF7/I_Q'][:]
     r = h5file['JF7/Q_bins'][:]
     
@@ -24,7 +24,16 @@ def load_processed_data(run):
         i0 = h5file['JF7/i0'].value
     
     nshots = h5file['JF7/num_shots'].value
-        
+
+    try:
+        nhits = np.int(h5file['JF7/num_hits'].value)
+        sum_hits = h5file['JF7/2D_sum_hits'].value
+        Iq_thr = h5file['JF7/I_threshold'].value
+    except KeyError:
+        nhits = None
+        sum_hits = None
+        Iq_thr = None
+    
     laser_i0 = h5file['SARES20/i0'].value
     try:
         laser_on = h5file['SARES20/laser_on'].value
@@ -35,7 +44,7 @@ def load_processed_data(run):
     print('run%s: %d shots' % (run, h5file['JF7/num_shots'].value))
     h5file.close()
         
-    return img,Iq,r,int(nshots),i0,laser_i0,laser_on,event_ID #maybe use dictionary here
+    return sum,Iq,r,int(nshots),sum_hits,Iq_thr,nhits,i0,laser_i0,laser_on,event_ID #maybe use dictionary here
 
 
 def do_histogram(a,bi,bf,db):
@@ -170,12 +179,14 @@ def Iq_normalization(q, Iq, nominator, q_min, q_max, rho=0.1, denominator=None, 
     '''
     if denominator is None:
         denominator = nominator
-    q_indices = (q > q_min) & (q < q_max)
+    q_indices = np.where((q >= q_min) & (q <= q_max))
     if choice == 'la':
         norm = np.average(nominator[q_indices]/Iq[q_indices])
+        print('Large-angle normalization: %.2f' % norm)
     else:
-        int_nom = np.trapz(q*q*nominator/denominator, x=q)
-        int_denom = np.trapz(q*q*Iq/denominator, x=q)
+        int_nom = np.trapz(q[q_indices]*q[q_indices]*nominator[q_indices]/denominator[q_indices], x=q[q_indices])
+        int_denom = np.trapz(q[q_indices]*q[q_indices]*Iq[q_indices]/denominator[q_indices], x=q[q_indices])
         norm = (int_nom-2*np.pi*np.pi*rho)/int_denom
+        print('Integral normalization: %.2f' % norm)
     Sq = (norm*Iq-nominator)/denominator
     return norm, Sq
