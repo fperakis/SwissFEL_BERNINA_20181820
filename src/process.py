@@ -118,7 +118,8 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
         i0 = get_i0(event['jf3'], gains_i0, pede_i0, mask_i0)
 
         icorr      = apply_gain_pede(event['jf7'],
-                                G=gains, P=pede, pixel_mask=mask)
+                                     G=gains, P=pede, pixel_mask=mask)
+        icorr[ icorr < 6.0 ] = 0.0 # remove zero photon noise
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
         icorr_sum += icorr_geom
 
