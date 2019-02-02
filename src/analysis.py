@@ -128,4 +128,58 @@ def AFF(q, atom, choice='AFF'):
     if choice is 'AFF'  = independent atomic form factor
                  'MAFF' = modified atomic form factor
     '''
-    pass
+    s = q/4/np.pi # crystallographer definition of q
+    
+    if atom == 'O':
+        a = [2.960427, 2.508818, 0.637853, 0.722838, 1.142756]
+        b = [14.182259, 5.936858, 0.112726, 34.958481, 0.390240]
+        c = 0.027014
+        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) +
+             a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) +
+             a[4]*np.exp(-b[4]*s*s) + c
+        if choice == 'MAFF':
+            # choose modified atomic form factor (MAFF)
+            alpha_O = 0.1075
+            alpha_H = -4*alpha_O
+            delta = 2.01 # A-1
+            f0 = f0*(1 + alpha_O*np.exp(-((4*np.pi*s)**2)/2/(delta*delta)))
+    elif atom == 'H':
+        a = [0.413048, 0.294953, 0.187491, 0.080701, 0.023736]
+        b = [15.569946, 32.398468, 5.711404, 61.889874, 1.334118]
+        c = 0.000049
+        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) +
+             a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) +
+             a[4]*np.exp(-b[4]*s*s) + c
+        if choice == 'MAFF':
+            # choose modified atomic form factor (MAFF)
+            alpha_O = 0.1075
+            alpha_H = -4*alpha_O
+            delta = 2.01 # A-1
+            f0 = f0*(1 + alpha_H*np.exp(-((4*np.pi*s)**2)/2/(delta*delta)))
+    else:
+        print('unknown atom: %s' % atom)
+        f0 = np.zeros_like(q)
+    return f0
+
+def Iq_normalization(q, Iq, nominator, rho=0.1, q_min, q_max, denominator=None, choice='la'):
+    '''
+    normalize I(q) to S(q) using the Warren normalization (large-angle method = la)
+    or Krogh-Moe normalization (integral method = int), set by the choice argument
+    nominator is the molecular form factor squared <F^2> (in electron units)
+    denominator is the spherical part of the molecular form factor squared <F>^2 (in electron units)
+    denominator is usually approximated to be equal to nominator, both can be in atom or molecular basis
+    rho is the atomic density (in atoms/A^3)
+    q_min and q_max (in A-1) sets the q-limits for the method
+    q and Iq are ndarrays with the same shape of momentum transfer (in A-1) and radial intensity, respectively
+    '''
+    if denominator is None:
+        denominator = nominator
+    q_indices = (q > q_min) & (q < q_max)
+    if choice == 'la':
+        norm = np.average(nominator[q_indices]/Iq[q_indices])
+    else:
+        int_nom = np.trapz(q*q*nominator/denominator, x=q)
+        int_denom = np.trapz(q*q*Iq/denominator, x=q)
+        norm = (int_nom-2*np.pi*np.pi*rho)/int_denom
+    Sq = (norm*Iq-nominator)/denominator
+    return norm, Sq
