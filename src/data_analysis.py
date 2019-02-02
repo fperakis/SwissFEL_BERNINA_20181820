@@ -19,7 +19,7 @@ def load_corrections(run):
     jf3_pede_file, jf7_pede_file = get_pedestals(run)
  
     gain_file = '/sf/bernina/config/jungfrau/gainMaps/JF07T32V01/gains.h5'
-    pede_file = jf7_pede_file#'/sf/bernina/data/p17743/res/waterJet_tests/JFpedestal/pedestal_20190125_1507.JF07T32V01.res.h5'
+    pede_file = jf7_pede_file #'/sf/bernina/data/p17743/res/waterJet_tests/JFpedestal/pedestal_20190125_1507.JF07T32V01.res.h5'
     mask_file = '/sf/bernina/data/p17743/res/JF_pedestals/pedestal_20190115_1551.JF07T32V01.res.h5'
     #try:
     #    if (np.int(run.split('_')[0]) > 26):
@@ -33,7 +33,7 @@ def load_corrections(run):
     with h5py.File(mask_file,'r') as f:
         noise = f['gainsRMS'].value
         mask = f['pixel_mask'].value
-    print('using pedestals from: %s', pede_file)
+    print('using pedestal from: %s' % pede_file)
     return gains,pede,noise,mask
 
 
