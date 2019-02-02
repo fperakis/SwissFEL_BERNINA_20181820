@@ -4,6 +4,7 @@ import time
 import sys
 
 sys.path.insert(0, '../src/')
+from scipy.signal import medfilt
 from data_analysis import *
 from integrators import *
 
@@ -73,10 +74,21 @@ def find_ice(Iq, q, threshold=0.1, filter_length=5, q_min=1.0, q_max=4.5):
     based on maximum gradient of median filtered intensities
     note: give Iq in photon/pix units/i0
     '''
-    median_filtered_Iq = median_filter(Iq, filter_length=filter_length)
-    ice_range_indices = np.where((q > q_min) & (q < q_max))
-    metric = np.array([np.max(np.abs(i[ice_range_indices]-i[(ice_range_indices[0]+1)])) for i in median_filtered_Iq])
-    hits = metric>threshold
+    median_filtered_Iq = medfilt(Iq, (1, filter_length))
+
+    ice_range_idx = (q > q_min) * (q < q_max)
+    diff = np.abs(median_filtered_Iq[:,ice_range_idx] - median_filtered_Iq[:,np.roll(ice_range_idx, 1)])
+    metric = np.max(diff, axis=1)
+    hits = ( metric > threshold )
+
+    #omedian_filtered_Iq = median_filter(Iq, filter_length=filter_length)
+    #ice_range_indices = np.where((q > q_min) & (q < q_max))
+    #ometric = np.array([np.max(np.abs(i[ice_range_indices]-i[(ice_range_indices[0]+1)])) for i in omedian_filtered_Iq])
+    #oldhits = metric>threshold
+
+    #print(np.sum(np.abs(ometric - metric)))
+    #print(np.sum(hits - oldhits))
+
     return metric,hits
 
 def median_filter(arr, filter_length=5):
