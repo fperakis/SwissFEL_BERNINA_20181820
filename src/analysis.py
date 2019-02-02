@@ -108,6 +108,9 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=20,r_max=30):
     '''
     calculate the pump probe signal
     '''
+    # cast laser_on to boolean (otherwise it messes up the code -ask TJ)
+    laser_on = laser_on.astype(bool)
+
     # averages
     hit_avg = np.average(Iq[hits,:], axis=0) 
     if misses is None:
