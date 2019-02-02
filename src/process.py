@@ -74,7 +74,7 @@ class ShotYielder:
         return event
 
 
-def main(run, photon_energy=9500, iq_threshold=0, ice_threshold=0, num_shots=0, 
+def main(run, photon_energy=9500, iq_threshold=0, num_shots=0, 
          path = '/sf/bernina/data/p17743/res/scan_info/'):
 
     t0 = time.time()
@@ -108,7 +108,7 @@ def main(run, photon_energy=9500, iq_threshold=0, ice_threshold=0, num_shots=0,
     ra = RadialAverager(rad_dist, mask_inv)
     r  = ra.bin_centers
 
-    roi_min = 5
+    roi_min = 30
     roi_max = 80
 
     # event loop
@@ -135,7 +135,7 @@ def main(run, photon_energy=9500, iq_threshold=0, ice_threshold=0, num_shots=0,
                      },
                     pulse_id = int(event['pulse_id']))
         
-        if (iq_threshold > 0) and (iq[roi_min:roi_max].mean() > iq_threshold):
+        if (iq_threshold > 0) and (iq[roi_min:roi_max].mean()/i0 > iq_threshold):
             hcorr_sum += icorr_geom
             num_hits += 1
             is_hit = 1
