@@ -118,3 +118,14 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=20,r_max=30):
     diff_signal = normalize(on_hits, r_min, r_max) - normalize(off_hits, r_min, r_max) # / normalize(off_hit, l, h)
     return hit_avg,miss_avg,diff_signal
 
+def AFF(q, atom, choice='AFF'):
+    '''
+    calculate the AFFs using five Gaussians fitted by
+    Waasmeier et al., Acta Crystallographica Section A (1995)
+    atom must be 'O' for oxygen or 'H' for hydrogen
+    q specifies the range of q-values for which the AFF
+    should be calculated in inverse Angstrom [A-1].
+    if choice is 'AFF'  = independent atomic form factor
+                 'MAFF' = modified atomic form factor
+    '''
+    pass
