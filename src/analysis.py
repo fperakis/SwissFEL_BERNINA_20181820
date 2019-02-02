@@ -134,9 +134,7 @@ def AFF(q, atom, choice='AFF'):
         a = [2.960427, 2.508818, 0.637853, 0.722838, 1.142756]
         b = [14.182259, 5.936858, 0.112726, 34.958481, 0.390240]
         c = 0.027014
-        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) +
-             a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) +
-             a[4]*np.exp(-b[4]*s*s) + c
+        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) + a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) + a[4]*np.exp(-b[4]*s*s) + c
         if choice == 'MAFF':
             # choose modified atomic form factor (MAFF)
             alpha_O = 0.1075
@@ -147,9 +145,7 @@ def AFF(q, atom, choice='AFF'):
         a = [0.413048, 0.294953, 0.187491, 0.080701, 0.023736]
         b = [15.569946, 32.398468, 5.711404, 61.889874, 1.334118]
         c = 0.000049
-        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) +
-             a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) +
-             a[4]*np.exp(-b[4]*s*s) + c
+        f0 = a[0]*np.exp(-b[0]*s*s) + a[1]*np.exp(-b[1]*s*s) + a[2]*np.exp(-b[2]*s*s) + a[3]*np.exp(-b[3]*s*s) + a[4]*np.exp(-b[4]*s*s) + c
         if choice == 'MAFF':
             # choose modified atomic form factor (MAFF)
             alpha_O = 0.1075
@@ -161,7 +157,7 @@ def AFF(q, atom, choice='AFF'):
         f0 = np.zeros_like(q)
     return f0
 
-def Iq_normalization(q, Iq, nominator, rho=0.1, q_min, q_max, denominator=None, choice='la'):
+def Iq_normalization(q, Iq, nominator, q_min, q_max, rho=0.1, denominator=None, choice='la'):
     '''
     normalize I(q) to S(q) using the Warren normalization (large-angle method = la)
     or Krogh-Moe normalization (integral method = int), set by the choice argument
