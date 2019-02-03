@@ -58,7 +58,7 @@ def do_histogram(a,bi,bf,db):
     return x,y
 
 
-def find_hits(Iq, threshold=0.015, r_min=30, r_max=80):
+def find_hits(Iq, threshold=0.015, r_min=200, r_max=400):
     '''
     finds the shots that hit water droplets based on
     a simple threshold on the average over a q-range

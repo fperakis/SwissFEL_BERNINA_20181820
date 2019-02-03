@@ -109,8 +109,8 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     ra = RadialAverager(rad_dist, mask_inv, n_bins=1000)
     r  = ra.bin_centers
     
-    roi_min = 30
-    roi_max = 80
+    roi_min = 200
+    roi_max = 400
     photon_threshold = 6.0
 
     # event loop
