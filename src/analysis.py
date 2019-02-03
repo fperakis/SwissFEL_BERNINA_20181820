@@ -8,12 +8,15 @@ from scipy.signal import medfilt
 from data_analysis import *
 from integrators import *
 
-def load_processed_data(run):
+def load_processed_data(run,path=None):
     '''
     loads data from processed h5
     '''
-
-    h5path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
+    
+    if path is None:
+        h5path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5'%run
+    else:
+        h5path = path+'run%s.h5'%run
     h5file = h5py.File(h5path,'r')
     sum = h5file['JF7/2D_sum'][:]
     Iq = h5file['JF7/I_Q'][:]
@@ -116,7 +119,7 @@ def normalize(array, low, high, subtract=False):
         norm_array = array / n # normalized to area
     return norm_array
 
-def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=20,r_max=30):
+def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=200,r_max=400):
     '''
     calculate the pump probe signal
     '''

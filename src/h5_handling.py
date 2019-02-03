@@ -7,13 +7,16 @@ import sys
 sys.path.insert(0, '../src/')
 from pedestals import *
 
-def discover_run_h5(run_num):
+def discover_run_h5(run_num,path=None):
     '''
     discovers h5 file of a given run number
     uses: pedestals.discover_files
     '''
     run_file = []
-    run_path = '/sf/bernina/data/p17743/res/work/hdf5/'
+    if path is None:
+        run_path = '/sf/bernina/data/p17743/res/work/hdf5/'
+    else:
+        run_path = path
     h5_files = discover_files(run_path)
     n_file = len(h5_files)
 
