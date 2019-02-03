@@ -6,13 +6,13 @@ import h5py
 from jungfrau_utils import apply_gain_pede, apply_geometry
 import time
 import sys
-from data_analysis import load_corrections, save_h5, load_corrections_i0, get_i0
 from smalldata import *
 
 sys.path.insert(0, '../src/')
 from integrators import *
 from masking import *
-
+from h5_handling import *
+from data_analysis import load_corrections, save_h5, load_corrections_i0, get_i0
 
 class ShotYielder:
 
@@ -79,6 +79,10 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
     t0 = time.time()
 
+    if type(run) is int:
+        run = discover_run_h5(run, path=path)
+    elif type(run) is not str:
+        print('invalid format on run:', type(run))
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5' % run
     shot_gen = ShotYielder(run, path, num_shots=num_shots)
 

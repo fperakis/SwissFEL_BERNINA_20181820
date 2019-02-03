@@ -28,7 +28,10 @@ parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/
 #'/sf/bernina/data/p17743/scratch/hdf5'
 
 args = parser.parse_args()
-run  = args.run
+try:
+    run = int(args.run)
+except ValueError:
+    run  = args.run
 path = args.path 
 shots = args.shots
 threshold = args.threshold

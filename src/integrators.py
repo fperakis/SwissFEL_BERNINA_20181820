@@ -188,7 +188,7 @@ def radial_distances(image, center=None):
     rad = np.sqrt(xx*xx + yy*yy)
     return rad
 
-def q_scale(pixel_distances, photon_energy=9500, detector_distance=0.140, pixel_size=75E-6):
+def q_scale(pixel_distances, photon_energy=9500, detector_distance=0.1249, pixel_size=75E-6):
     """
     Compute the momentum transfer (A-1) for a radial profile in pixels
     
