@@ -6,7 +6,7 @@ then
   echo "give a single argument: run number to start at"
 else
 
-  (( end = start + 10 ))
+  (( end = start + 9 ))
   echo "${start} --> ${end}"
   for i in `seq ${start} ${end}`; do
       echo $i
