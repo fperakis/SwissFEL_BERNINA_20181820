@@ -28,6 +28,7 @@ parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/
 #'/sf/bernina/data/p17743/scratch/hdf5'
 
 args = parser.parse_args()
+
 try:
     run = int(args.run)
 except ValueError:

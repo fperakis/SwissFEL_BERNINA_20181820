@@ -80,7 +80,9 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     t0 = time.time()
 
     if type(run) is int:
-        run = discover_run_h5(run, path=path)
+        run_file = discover_run_h5(run, path=path)
+        if run_file.startswith('run'):
+            run = run_file[3:].split('.')[0]
     elif type(run) is not str:
         print('invalid format on run:', type(run))
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5' % run
