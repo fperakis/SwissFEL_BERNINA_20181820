@@ -12,7 +12,6 @@ def iceIc_peaks():
     c = 3*1e8 #m/s
     lambda_ = h*c/xrd_energy*1e10 #1.5498 Angst # wavelength of the X-rays
 
-    
     # -- convert degrees to theta
     ice_q = 4.*np.pi*np.sin(ice_2theta/2.*np.pi/180.)/lambda_
 
@@ -30,10 +29,12 @@ def iceIh_peaks():
     c = 3*1e8 #m/s
     lambda_ = h*c/xrd_energy*1e10 #1.5498 Angst # wavelength of the X-rays
 
-    
     # -- convert degrees to theta
     ice_q = 4.*np.pi*np.sin(ice_2theta/2.*np.pi/180.)/lambda_
 
     return ice_q
 
 
+def silver_behenate():
+    q = [0.107625095, 0.215250189, 0.322875284, 0.430500378]
+    return q
