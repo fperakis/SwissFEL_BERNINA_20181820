@@ -104,7 +104,7 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
 
     # initialise for angular integration
-    rad_dist = radial_distances(icorr_sum, center=(2117,2222))
+    rad_dist = radial_distances(icorr_sum, center=(2223,2118))
     ra = RadialAverager(rad_dist, mask_inv)
     r  = ra.bin_centers
 
