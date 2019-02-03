@@ -74,7 +74,7 @@ class RadialAverager(object):
 
     @property
     def bin_centers(self):
-        return np.arange(self.n_bins) / self._bin_factor
+        return (np.arange(self.n_bins) + 0.5) / self._bin_factor
 
 
 def angular_average(image, mask=None, rad=None, center=None, threshold=None, nx=None,
