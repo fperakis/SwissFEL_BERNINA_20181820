@@ -153,7 +153,7 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
     # RUN SUMMARY PRINT
     if iq_threshold > 0:
-        print('-- Processed %d shots with %d hits: %.01f%%'
+        print('-- Processed %d shots with %d hits: %.03f%%'
               ''%(num_shots, num_hits, 100*num_hits/num_shots))
         print('-- Analyzed data in: %d min, %d s'
               ''%((time.time()-t0)/60, (time.time()-t0)%60))

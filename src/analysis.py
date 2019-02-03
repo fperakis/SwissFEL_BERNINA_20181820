@@ -124,23 +124,32 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=20,r_max=30):
     laser_on = laser_on.astype(bool)
 
     # averages
-    hit_avg = np.average(Iq[hits,:], axis=0) 
     if misses is None:
         misses = np.logical_not(hits)
-    miss_avg = np.average(Iq[misses,:], axis=0)
+    Iq_miss_avg = np.average(Iq[misses,:], axis=0)
+    # hit sanity check
+    if hits.sum() > 0:
+        Iq_hit_avg = np.average(Iq[hits,:], axis=0)
+    else:
+        return np.zeros_like(Iq_miss_avg),Iq_miss_avg,np.zeros_like(Iq_miss_avg)
     
     # misses (laser on/off)
-    off_misses = np.average(Iq[misses * np.logical_not(laser_on),:], axis=0)
-    on_misses  = np.average(Iq[misses * laser_on,:], axis=0)
+    Iq_off_misses = np.average(Iq[misses * np.logical_not(laser_on),:], axis=0)
+    Iq_on_misses  = np.average(Iq[misses * laser_on,:], axis=0)
 
     # hits (laser on/off)
-    off_hits = np.average(Iq[hits * np.logical_not(laser_on),:], axis=0)
-    on_hits  = np.average(Iq[hits * laser_on,:], axis=0)
-
+    hits_off = hits * np.logical_not(laser_on)
+    hits_on = hits * laser_on
+    if (hits_on.sum() > 0) and (hits_off.sum() > 0):
+        Iq_off_hits = np.average(Iq[hits_off,:], axis=0)
+        Iq_on_hits  = np.average(Iq[hits_on,:], axis=0)
+    else:
+        return Iq_hit_avg,Iq_miss_avg,np.zeros_like(Iq_miss_avg)
+    
     # signal
     #diff_signal = on_hits - off_hits
-    diff_signal = normalize(on_hits, r_min, r_max) - normalize(off_hits, r_min, r_max) # / normalize(off_hit, l, h)
-    return hit_avg,miss_avg,diff_signal
+    diff_signal = normalize(Iq_on_hits, r_min, r_max) - normalize(Iq_off_hits, r_min, r_max) # / normalize(Iq_off_hits, l, h)
+    return Iq_hit_avg,Iq_miss_avg,diff_signal
 
 def AFF(q, atom, choice='AFF'):
     '''
