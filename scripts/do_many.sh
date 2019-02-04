@@ -1,12 +1,12 @@
 
 start=$1
+end=$2
 
 if [ $# -eq 0 ];
 then
   echo "give a single argument: run number to start at"
 else
 
-  (( end = start + 9 ))
   echo "${start} --> ${end}"
   for i in `seq ${start} ${end}`; do
       echo $i
