@@ -18,7 +18,10 @@ def load_processed_data(run,path=None):
     else:
         h5path = path+'run%s.h5'%run
     h5file = h5py.File(h5path,'r')
-    sum = h5file['JF7/2D_sum'][:]
+    try:
+        sum = h5file['JF7/2D_sum'][:]
+    except KeyError:
+        sum = np.zeros(( 4432, 4215 )) # bad solution: fix this in file instead
     Iq = h5file['JF7/I_Q'][:]
     r = h5file['JF7/Q_bins'][:]
     
@@ -34,9 +37,9 @@ def load_processed_data(run,path=None):
         sum_hits = h5file['JF7/2D_sum_hits'].value
         Iq_thr = h5file['JF7/I_threshold'].value
     except KeyError:
-        nhits = None
-        sum_hits = None
-        Iq_thr = None
+        nhits = 0
+        sum_hits = np.zeros_like(sum)
+        Iq_thr = 0
     
     laser_i0 = h5file['SARES20/i0'].value
     try:
@@ -154,21 +157,21 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=200,r_max=400):
     diff_signal = normalize(Iq_on_hits, r_min, r_max) - normalize(Iq_off_hits, r_min, r_max) # / normalize(Iq_off_hits, l, h)
     return Iq_hit_avg,Iq_miss_avg,diff_signal
 
-def subtract_background(Iq,hits,misses=None,i0,nshots):
+def subtract_background(Iq,hits,i0,nshots,misses=None):
     '''
     Calculates the average of missed shots and subtracts it as a background
     '''
 
+    # in case there are no hits 
+    if hits.sum() == 0:
+        return None
+    
     # calculate background based on normalised misses
     if misses is None:
         miss = np.logical_not(hits)
     else:
         miss = misses
     Iq_background = np.average(Iq[miss],axis=0,weights=i0[miss])
-    
-    # in case there are no hits 
-    if hits.sum() == 0:
-        return Iq 
     
     # subtract background
     Iq_corr = np.zeros_like(Iq[hits])
@@ -183,24 +186,25 @@ def subtract_background(Iq,hits,misses=None,i0,nshots):
 def pump_probe_signal_2(Iq,hits,laser_on,r_min=200,r_max=300):
     '''
     calculate the pump probe signal
-    '''    
-    # important: cast laser_on to boolean (otherwise it messes up the code -ask TJ)
-    laser_on_hits = laser_on[hits].astype(bool)   
-    laser_off_hits = np.logical_not(laser_on_hits)
- 
-    # laser on and off shots
-    print(Iq.shape)
-    Iq_on_avg = np.average(Iq[laser_on_hits],axis=0)
-    Iq_off_avg = np.average(Iq[laser_off_hits],axis=0)
-    
-    # pump-probe difference signal
-    diff_signal = normalize(Iq_on_avg, r_min, r_max) - normalize(Iq_off_avg, r_min, r_max)
- 
+    '''
     # in case there are no hits return en empty array
-    if hits.sum()>0:
-    	return diff_signal
+    if hits.sum() > 0:
+        # important: cast laser_on to boolean (otherwise it messes up the code -ask TJ)
+        laser_on_hits = laser_on[hits].astype(bool)   
+        laser_off_hits = np.logical_not(laser_on_hits)
+ 
+        # laser on and off shots
+        if (laser_on_hits.sum() > 0) and (laser_off_hits.sum() > 0):
+            Iq_on_avg = np.average(Iq[laser_on_hits],axis=0)
+            Iq_off_avg = np.average(Iq[laser_off_hits],axis=0)
+        else:
+            return np.zeros_like(np.average(Iq,axis=0))
+        
+        # pump-probe difference signal
+        diff_signal = normalize(Iq_on_avg, r_min, r_max) - normalize(Iq_off_avg, r_min, r_max)
+        return diff_signal
     else:
-        return np.zeros_like(diff_signal)
+        return np.zeros_like(np.average(Iq,axis=0))
     
 
 def AFF(q, atom, choice='AFF'):
