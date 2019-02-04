@@ -154,6 +154,52 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=200,r_max=400):
     diff_signal = normalize(Iq_on_hits, r_min, r_max) - normalize(Iq_off_hits, r_min, r_max) # / normalize(Iq_off_hits, l, h)
     return Iq_hit_avg,Iq_miss_avg,diff_signal
 
+def subtract_background(Iq,hits,i0,nshots):
+    '''
+    Calculates the average of missed shots and subtracts it as a background
+    '''
+
+    # calculate background based on normalised misses
+    miss = np.logical_not(hits)
+    Iq_background = np.average(Iq[miss],axis=0,weights=i0[miss])
+    
+    # in case there are no hits 
+    if hits.sum() == 0:
+        return Iq 
+    
+    # subtract background
+    Iq_corr = np.zeros_like(Iq[hits])
+    
+    for i in range(np.sum(hits)):
+        norm = i0[hits][i]/np.average(i0[hits])
+        Iq_corr[i] = Iq[hits][i]/norm - Iq_background/norm
+    
+    return Iq_corr
+
+
+def pump_probe_signal_2(Iq,hits,laser_on,r_min=200,r_max=300):
+    '''
+    calculate the pump probe signal
+    '''    
+    # important: cast laser_on to boolean (otherwise it messes up the code -ask TJ)
+    laser_on_hits = laser_on[hits].astype(bool)   
+    laser_off_hits = np.logical_not(laser_on_hits)
+ 
+    # laser on and off shots
+    print(Iq.shape)
+    Iq_on_avg = np.average(Iq[laser_on_hits],axis=0)
+    Iq_off_avg = np.average(Iq[laser_off_hits],axis=0)
+    
+    # pump-probe difference signal
+    diff_signal = normalize(Iq_on_avg, r_min, r_max) - normalize(Iq_off_avg, r_min, r_max)
+ 
+    # in case there are no hits return en empty array
+    if hits.sum()>0:
+    	return diff_signal
+    else:
+        return np.zeros_like(diff_signal)
+    
+
 def AFF(q, atom, choice='AFF'):
     '''
     calculate the AFFs using five Gaussians fitted by
