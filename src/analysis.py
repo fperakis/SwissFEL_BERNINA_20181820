@@ -154,13 +154,16 @@ def pump_probe_signal(Iq,hits,laser_on,misses=None,r_min=200,r_max=400):
     diff_signal = normalize(Iq_on_hits, r_min, r_max) - normalize(Iq_off_hits, r_min, r_max) # / normalize(Iq_off_hits, l, h)
     return Iq_hit_avg,Iq_miss_avg,diff_signal
 
-def subtract_background(Iq,hits,i0,nshots):
+def subtract_background(Iq,hits,misses=None,i0,nshots):
     '''
     Calculates the average of missed shots and subtracts it as a background
     '''
 
     # calculate background based on normalised misses
-    miss = np.logical_not(hits)
+    if misses is None:
+        miss = np.logical_not(hits)
+    else:
+        miss = misses
     Iq_background = np.average(Iq[miss],axis=0,weights=i0[miss])
     
     # in case there are no hits 
