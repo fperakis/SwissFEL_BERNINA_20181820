@@ -54,9 +54,13 @@ class ShotYielder:
         # get laser i0
         laser_i0_100Hz = data['SARES20-LSCP9-FNS:CH1:VAL_GET'].data
 
+        # get spectra
+        spectrum = data['SARFE10-PSSS059:FPICTURE.spectrum'].data
+        
         self.jf_pulse_id = jf_pulse_id
         self.jf7         = jf7
         self.jf3         = jf3
+        self.spectrum    = spectrum
         self.laser_on_100Hz = laser_on_100Hz
         self.laser_i0_100Hz = laser_i0_100Hz
         self.matched_id = matched_id
@@ -68,6 +72,7 @@ class ShotYielder:
         event = {'pulse_id' : self.jf_pulse_id[i],
                  'jf7' :      self.jf7.data[i].compute(),
                  'jf3' :      self.jf3.data[i].compute(),
+                 'spectrum' : self.spectrum.data[i].compute(),
                  'laser_on' : self.laser_on_100Hz[self.matched_id][i].compute(),
                  'laser_i0' : self.laser_i0_100Hz[self.matched_id][i].compute() 
                 }
@@ -125,7 +130,7 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
         i0 = get_i0(event['jf3'], gains_i0, pede_i0, mask_i0)
 
-        icorr      = apply_gain_pede(event['jf7'],
+        icorr = apply_gain_pede(event['jf7'],
                                      G=gains, P=pede, pixel_mask=mask)
         icorr[ icorr < photon_threshold ] = 0.0 # remove zero photon noise
         icorr_geom = apply_geometry(icorr,'JF07T32V01')
@@ -133,11 +138,16 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
 
         iq         = ra(icorr_geom)
 
+        s = .astype('float64')
+        spectrum = s - s.
+
         smd.event({
-                   'JF7' : 
+                   'JF7': 
                        {'I_Q': iq},
                     "JF3": 
-                       {"i0": float(i0)}, 
+                       {"i0": float(i0)},
+                    "SARFE10": 
+                       {'spectrum': event['spectrum']},
                     "SARES20":
                        {"i0": float(event['laser_i0']),
                         "laser_on": int(event['laser_on'])}, 
