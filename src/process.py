@@ -1,4 +1,4 @@
-from pathlib import Path
+#from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 from escape.parse import swissfel
@@ -6,9 +6,9 @@ import h5py
 from jungfrau_utils import apply_gain_pede, apply_geometry
 import time
 import sys
-from smalldata import *
 
 sys.path.insert(0, '../src/')
+from smalldata import *
 from integrators import *
 from masking import *
 from h5_handling import *
@@ -53,9 +53,9 @@ class ShotYielder:
         
         # get laser i0
         laser_i0_100Hz = data['SARES20-LSCP9-FNS:CH1:VAL_GET'].data
-
+        
         # get spectra
-        spectrum = data['SARFE10-PSSS059:FPICTURE.spectrum'].data
+        spectrum = data['SARFE10-PSSS059:FPICTURE.spectrum']
         
         self.jf_pulse_id = jf_pulse_id
         self.jf7         = jf7
@@ -137,9 +137,6 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
         icorr_sum += icorr_geom
 
         iq         = ra(icorr_geom)
-
-        s = .astype('float64')
-        spectrum = s - s.
 
         smd.event({
                    'JF7': 
