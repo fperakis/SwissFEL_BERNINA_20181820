@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#if [ $# != 1  ]; then
+#    echo "Usage: $0 [alvra|bernina]"
+#    exit 1
+#fi
+    
+default=/sf/bernina/anaconda/bernina_envs/bernina36
+dest=${1:-$default}
+
+echo Loading Bernina Anaconda Python
+source /sf/bernina/bin/anaconda_bernina_env
+
+
+conda config --add envs_dirs /sf/bernina/anaconda/bernina_envs
+
+echo Activating Conda environment ${1:-$dest}
+conda activate ${1:-$dest}
+#source activate $dest
+
