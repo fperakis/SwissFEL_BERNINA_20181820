@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from escape.parse import swissfel
 import h5py
+import csv
 from jungfrau_utils import apply_gain_pede, apply_geometry
 import time
 import sys
@@ -80,7 +81,7 @@ class ShotYielder:
 
 
 def main(run, photon_energy=9500, iq_threshold=0, num_shots=0, 
-         path = '/sf/bernina/data/p17743/res/scan_info/'):
+         path = '/sf/bernina/data/p17743/res/scan_info/', taglist=None):
 
     t0 = time.time()
 
@@ -92,7 +93,19 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
         print('invalid format on run:', type(run))
     save_path = '/sf/bernina/data/p17743/res/work/hdf5/run%s.h5' % run
     shot_gen = ShotYielder(run, path, num_shots=num_shots)
-
+    tags = []
+    if taglist is not None:
+        try:
+            with open(taglist) as csvfile:
+                tagreader = csv.reader(csvfile, delimiter=' ', quotechar='#') 
+                for row in tagreader: 
+                    tags.append(np.int64(row))
+            tags = np.array(tags).flatten()
+            print('found %d tags to save from: %s' % (tags.shape[0], taglist))
+        except Exception as e:
+            print('could not read file: %s' % taglist)
+            print(e)
+    
     smd = SmallData(save_path, 'pulse_id')
 
     if num_shots == 0:
@@ -112,6 +125,9 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     icorr_sum = np.zeros((4432, 4215))
     hcorr_sum = np.zeros((4432, 4215))
     num_hits = 0
+    if len(tags) > 0:
+        tcorr = np.zeros((tags.shape[0], 4432, 4215))
+        num_tags = 0
 
 
     # initialise for angular integration
@@ -157,19 +173,27 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
             is_hit = 1
         else:
             is_hit = 0
-        print('run%s - pid.%d - s.%i - %.1f Hz - %.2f photon/pix - HIT = %d'
+        if int(event['pulse_id']) in tags:
+            tcorr[np.where(int(event['pulse_id']) == tags)[0]] = icorr_geom
+            num_tags += 1
+        print('run%s - pid.%d - s.%i - %.1f Hz - %.2f photon/pix - HIT = %d - TAG = %d'
               '' % (run,
                     int(event['pulse_id']),
                     i_shot,
                     1.0/(time.time() - t1),
                     np.mean(icorr_geom[mask_inv])*1000/photon_energy,
-                    is_hit)
+                    is_hit,
+                    int(event['pulse_id']) in tags)
              )
 
     # RUN SUMMARY PRINT
     if iq_threshold > 0:
-        print('-- Processed %d shots with %d hits: %.03f%%'
-              ''%(num_shots, num_hits, 100*num_hits/num_shots))
+        if len(tags) > 0:
+            print('-- Processed %d shots with %d hits and %d tags: %.03f%%'
+                  ''%(num_shots, num_hits, num_tags, 100*num_hits/num_shots))
+        else:
+            print('-- Processed %d shots with %d hits: %.03f%%'
+                  ''%(num_shots, num_hits, 100*num_hits/num_shots))
         print('-- Analyzed data in: %d min, %d s'
               ''%((time.time()-t0)/60, (time.time()-t0)%60))
     else:
@@ -182,6 +206,10 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
     smd.sum(icorr_sum)
     smd.sum(hcorr_sum)
     smd.sum(num_hits)
+    if len(tags) > 0:
+        smd.sum(tcorr)
+        smd.sum(num_tags)
+        smd.sum(tags)
     
     save_data = {"JF7":
                   {"2D_sum":    icorr_sum, 
@@ -194,6 +222,11 @@ def main(run, photon_energy=9500, iq_threshold=0, num_shots=0,
         save_data["JF7"]["num_hits"]    = num_hits
         save_data["JF7"]["I_threshold"] = iq_threshold
 
+    if len(tags) > 0:
+        save_data["JF7"]["2D_tags"] = tcorr
+        save_data["JF7"]["taglist"] = tags
+        save_data["JF7"]["num_tags"] = num_tags
+    
     # save to small data file
     smd.save(save_data)
 

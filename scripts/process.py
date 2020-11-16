@@ -25,6 +25,8 @@ parser.add_argument('-r', '--run', type=str, required=True, help='run number to 
 parser.add_argument('-s','--shots',type=int, default=0, help='number of shots to process (default: 0 = all)')
 parser.add_argument('-t','--threshold',type=float, default=0, help='hit threshold for radial profile (default: 0 = no hits)')
 parser.add_argument('-p','--path',type=str,default='/sf/bernina/data/p17743/res/scan_info/',help='path to data')
+parser.add_argument('-l','--taglist',type=str,default='/sf/bernina/data/p17743/res/work/tags/weakice_Taglist_run76_to_79_16_mm.txt',help='text file with shots to save') #default='/sf/bernina/data/p17743/res/work/tags/weakice_Taglist_run165_to_170_75_mm.txt'
+#'/das/work/p17/p17743/tags/weakice_Taglist_run165_to_170_75_mm.txt'
 #'/sf/bernina/data/p17743/scratch/hdf5'
 
 args = parser.parse_args()
@@ -38,5 +40,5 @@ shots = args.shots
 threshold = args.threshold
 
 # - process run
-process_main(run, path=path, num_shots=shots, iq_threshold=threshold)
+process_main(run, path=path, num_shots=shots, iq_threshold=threshold, taglist=args.taglist)
 
